@@ -256,8 +256,8 @@ const roleNavigation: Record<Role, { main: NavItem[]; bottom: NavItem[] }> = {
   },
 };
 
-function Modal({ title, children, close }: { title: string; children: React.ReactNode; close: () => void }) {
-  return <div className="modal-backdrop" onMouseDown={close}><div className="modal" onMouseDown={(e) => e.stopPropagation()}><h2>{title}</h2>{children}</div></div>;
+function Modal({ title, children, close, icon }: { title: string; children: React.ReactNode; close: () => void; icon?: string }) {
+  return <div className="modal-backdrop" onMouseDown={close}><div className="modal" onMouseDown={(e) => e.stopPropagation()}>{icon && <div className="modal-icon"><Icon name={icon} /></div>}<h2>{title}</h2>{children}</div></div>;
 }
 
 function Sidebar({ role, page, collapsed, mobile, select, toggle, close }: { role: Role; page: PortalPage; collapsed: boolean; mobile: boolean; select: (p: PortalPage | "logout") => void; toggle: () => void; close: () => void }) {
@@ -293,7 +293,7 @@ function Portal({ role, name, state, update, logout }: { role: Role; name: strin
     <Sidebar role={role} page={page} collapsed={collapsed} mobile={mobile} select={go} toggle={() => setCollapsed(!collapsed)} close={() => setMobile(false)} />
     <header className="mobile-header"><button onClick={() => setMobile(true)} aria-label="Buka menu"><Icon name="menu" /></button><Logo /><button onClick={() => go("notifications")} aria-label="Notifikasi"><Icon name="bell" /></button></header>
     <div className="portal-content">{role === "citizen" && <CitizenRouter page={page} setPage={go} state={state} update={update} notify={notify} name={name} />}{role === "posko" && <PoskoRouter page={page} setPage={go} state={state} update={update} notify={notify} />}{role === "responder" && <ResponderRouter page={page} setPage={go} state={state} update={update} notify={notify} />}<MobileNav role={role} page={page} go={go} /></div>
-    {logoutOpen && <Modal title="Keluar dari akun?" close={() => setLogoutOpen(false)}><p>Sesi Anda akan diakhiri. Anda dapat masuk kembali kapan saja.</p><div className="modal-actions"><Button variant="secondary" onClick={() => setLogoutOpen(false)}>Batal</Button><Button onClick={logout}>Keluar</Button></div></Modal>}
+    {logoutOpen && <Modal icon="logout" title="Keluar dari akun?" close={() => setLogoutOpen(false)}><p>Sesi Anda akan diakhiri. Anda dapat masuk kembali kapan saja.</p><div className="modal-actions"><Button variant="secondary" onClick={() => setLogoutOpen(false)}>Batal</Button><Button onClick={logout}>Keluar</Button></div></Modal>}
     {toast && <div className="toast"><Icon name="check" /> {toast}</div>}
   </div>;
 }
