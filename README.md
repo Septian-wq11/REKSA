@@ -1,55 +1,58 @@
-# REKSA - Sistem Kolaborasi Pascabencana
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-REKSA (Respon Cepat Tanggap Bencana) adalah platform aplikasi kolaborasi yang memfasilitasi koordinasi cepat dan terstruktur pascabencana antara masyarakat yang terdampak, posko komando, dan relawan lapangan.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## Fitur Utama
+## About Laravel
 
-Aplikasi ini memiliki tiga mode akses utama (berdasarkan peran pengguna):
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-1. **Layanan Masyarakat (Citizen)**
-   - Melaporkan kebutuhan darurat (Air Bersih, Makanan, Medis, dll).
-   - Memantau perjalanan bantuan dan status verifikasi laporan secara *real-time*.
-   - Konfirmasi penerimaan bantuan.
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-2. **Ringkasan Operasional Posko (Command Center)**
-   - Dasbor pemantauan beban kerja dan kasus aktif yang perlu ditangani.
-   - Peta Kebutuhan terintegrasi untuk melihat titik koordinat pelaporan.
-   - Manajemen alokasi sumber daya dari berbagai instansi (BPBD, PMI, Mitra Lokal).
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-3. **Penugasan Lapangan (Responder)**
-   - Manajemen daftar tugas bagi relawan dan petugas lapangan.
-   - Navigasi dan rute pengiriman logistik bantuan.
-   - Pelaporan status penyerahan bantuan ke posko.
+## Learning Laravel
 
-## Teknologi yang Digunakan
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-Aplikasi ini dibangun menggunakan arsitektur modern dan ringan:
-- **Framework**: React.js
-- **Build Tool**: Vite
-- **Bahasa**: TypeScript
-- **Styling**: Vanilla CSS (dengan sistem variabel dan *responsive design* kustom)
+In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Panduan Menjalankan Proyek Secara Lokal
+You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
 
-Untuk menjalankan proyek ini di mesin lokal, pastikan Anda telah menginstal [Node.js](https://nodejs.org/) versi terbaru.
+## Agentic Development
 
-1. **Kloning repositori ini**
-   ```bash
-   git clone https://github.com/Septian-wq11/REKSA.git
-   cd reksa-v1
-   ```
+Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
 
-2. **Instal dependensi**
-   ```bash
-   npm install
-   ```
+```bash
+composer require laravel/boost --dev
 
-3. **Jalankan server pengembangan (Development Server)**
-   ```bash
-   npm run dev
-   ```
-   Aplikasi dapat diakses melalui browser di alamat yang disediakan oleh Vite (secara bawaan: `http://localhost:5173/` atau `http://localhost:8443/`).
+php artisan boost:install
+```
 
-## Kontribusi
+Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
-Proyek ini menggunakan alur kerja kontrol versi Git. Setiap perbaikan bug kecil, pembaruan desain antarmuka, dan optimasi fitur dikelola dalam *commit* terpisah secara atomik untuk menjaga rekam jejak repositori tetap rapi.
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

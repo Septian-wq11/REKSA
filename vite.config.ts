@@ -1,21 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'node:path'
+import { fileURLToPath, URL } from 'node:url'
 
-// Vite config — https://vitejs.dev/config/
+// Unified Vite configuration for Laravel
 export default defineConfig({
+  base: '/dist/',
+  publicDir: false,
   plugins: [
     react(),
     tailwindcss(),
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  server: {
-    host: '0.0.0.0',
-    port: 8443,
+  build: {
+    outDir: 'public/dist',
+    emptyOutDir: true,
   },
 })
