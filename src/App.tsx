@@ -8,6 +8,7 @@ const PHOTO =
 
 export type CaseRecord = {
   id: string;
+  rawId?: number;
   item: string;
   location: string;
   kk: string;
@@ -987,20 +988,21 @@ function Sidebar({ role, page, collapsed, mobile, select, toggle, close, setRole
               <small style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.7)", fontWeight: 600, display: "block", marginBottom: "6px" }}>
                 Ganti Role / Akun Demo:
               </small>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "4px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "5px" }}>
                 <button
                   type="button"
-                  onClick={() => { setRole("citizen"); setName?.("Andi Pratama"); notify?.("Beralih ke role Warga (Andi Pratama)"); close(); }}
+                  onClick={() => { setRole("citizen"); setName?.("Andi Pratama"); select("dashboard"); notify?.("Beralih ke role Warga (Andi Pratama)"); close(); }}
                   style={{
                     fontSize: "11px",
-                    padding: "5px 2px",
+                    padding: "6px 2px",
                     borderRadius: "6px",
-                    border: role === "citizen" ? "1px solid #52c41a" : "1px solid rgba(255,255,255,0.2)",
-                    background: role === "citizen" ? "#52c41a" : "rgba(255,255,255,0.08)",
+                    border: role === "citizen" ? "1px solid #b2d7bb" : "1px solid rgba(255,255,255,0.18)",
+                    background: role === "citizen" ? "#15803d" : "rgba(255,255,255,0.08)",
                     color: "#ffffff",
                     fontWeight: role === "citizen" ? 700 : 500,
                     cursor: "pointer",
                     textAlign: "center",
+                    fontFamily: "inherit",
                   }}
                   title="Warga Pemohon (Andi Pratama)"
                 >
@@ -1008,17 +1010,18 @@ function Sidebar({ role, page, collapsed, mobile, select, toggle, close, setRole
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setRole("posko"); setName?.("Siti Rahma"); notify?.("Beralih ke role BPBD (Siti Rahma) - Siap Memverifikasi"); close(); }}
+                  onClick={() => { setRole("posko"); setName?.("Siti Rahma"); select("dashboard"); notify?.("Beralih ke role BPBD (Siti Rahma)"); close(); }}
                   style={{
                     fontSize: "11px",
-                    padding: "5px 2px",
+                    padding: "6px 2px",
                     borderRadius: "6px",
-                    border: role === "posko" ? "1px solid #1890ff" : "1px solid rgba(255,255,255,0.2)",
-                    background: role === "posko" ? "#1890ff" : "rgba(255,255,255,0.08)",
+                    border: role === "posko" ? "1px solid #c1c3ac" : "1px solid rgba(255,255,255,0.18)",
+                    background: role === "posko" ? "#0f766e" : "rgba(255,255,255,0.08)",
                     color: "#ffffff",
                     fontWeight: role === "posko" ? 700 : 500,
                     cursor: "pointer",
                     textAlign: "center",
+                    fontFamily: "inherit",
                   }}
                   title="Koordinator Posko BPBD (Siti Rahma)"
                 >
@@ -1026,17 +1029,18 @@ function Sidebar({ role, page, collapsed, mobile, select, toggle, close, setRole
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setRole("responder"); setName?.("Arif Nugroho"); notify?.("Beralih ke role Mitra Bantuan (Arif Nugroho)"); close(); }}
+                  onClick={() => { setRole("responder"); setName?.("Arif Nugroho"); select("dashboard"); notify?.("Beralih ke role Mitra Bantuan (Arif Nugroho)"); close(); }}
                   style={{
                     fontSize: "11px",
-                    padding: "5px 2px",
+                    padding: "6px 2px",
                     borderRadius: "6px",
-                    border: role === "responder" ? "1px solid #fa8c16" : "1px solid rgba(255,255,255,0.2)",
-                    background: role === "responder" ? "#fa8c16" : "rgba(255,255,255,0.08)",
+                    border: role === "responder" ? "1px solid #fde68a" : "1px solid rgba(255,255,255,0.18)",
+                    background: role === "responder" ? "#b45309" : "rgba(255,255,255,0.08)",
                     color: "#ffffff",
                     fontWeight: role === "responder" ? 700 : 500,
                     cursor: "pointer",
                     textAlign: "center",
+                    fontFamily: "inherit",
                   }}
                   title="Mitra / Satgas BPBD (Arif Nugroho)"
                 >
@@ -1069,6 +1073,12 @@ function Portal({ role, setRole, name, setName, state, update, logout, onRefresh
   const [isMobileView, setIsMobileView] = useState(() => window.innerWidth <= 900);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [toast, setToast] = useState("");
+
+  // Auto reset page to dashboard whenever role switches
+  useEffect(() => {
+    setPage("dashboard");
+  }, [role]);
+
   useEffect(() => {
     const check = () => {
       const isNowMobile = window.innerWidth <= 900;
@@ -2978,10 +2988,30 @@ function CaseDetail({
   const handleApproveBursaClaim = async () => {
     try {
       setIsApprovingClaim(true);
-      const matchingBursa = state.bursaList?.find(
-        (b) => b.kebutuhan_id?.toString() === activeCase.id || b.kebutuhan?.kode_kasus === activeCase.id
+      const matchingOffer = state.penawaranList?.find(
+        (p) =>
+          ((activeCase?.rawId && p.kebutuhan_id === activeCase.rawId) ||
+           p.kebutuhan?.kode_kasus === activeCase?.id ||
+           p.kebutuhan_id?.toString() === activeCase?.id) &&
+          p.status === "Diajukan"
       );
-      if (matchingBursa) {
+      const matchingBursa = state.bursaList?.find(
+        (b) =>
+          (activeCase?.rawId && b.kebutuhan_id === activeCase.rawId) ||
+          b.kebutuhan?.kode_kasus === activeCase?.id ||
+          b.kebutuhan_id?.toString() === activeCase?.id ||
+          (b.item_bantuan && activeCase?.item && b.item_bantuan.toLowerCase().includes(activeCase.item.toLowerCase()))
+      );
+
+      if (matchingOffer) {
+        const res = await apiService.approvePenawaran(matchingOffer.id, {
+          approved_volume: matchingOffer.jumlah_tawaran,
+          catatan: "Proposal disetujui Koordinator Posko dari Detail Kasus.",
+        });
+        if (res.success) {
+          notify?.(`Proposal mitra berhasil disetujui! Misi ${res.data.misi?.kode_misi || "MISI"} resmi diterbitkan.`);
+        }
+      } else if (matchingBursa) {
         const res = await apiService.approveClaimBursa(matchingBursa.id, {
           approved_volume: matchingBursa.claimed_volume || matchingBursa.target_volume,
           catatan: "Alokasi disetujui Koordinator Posko dari Detail Kasus.",
@@ -3026,34 +3056,73 @@ function CaseDetail({
   // Accurate progressive fulfillment calculation (5 stages = 20% each)
   const percent = getCaseProgress(activeCase.status);
 
-  const getAllocationItems = () => {
-    if (activeCase.item.toLowerCase().includes("makan")) {
-      return [
-        { name: "Dapur Umum BPBD Wilayah", type: "Instansi Pemerintah", qty: "60% Target", cap: 60, est: "Mobil Dapur Lapangan", status: "Alokasi Disetujui" },
-        { name: "PMI Wilayah & Relawan", type: "Organisasi Kemanusiaan", qty: "30% Target", cap: 90, est: "Armada Distribusi PMI", status: "Klaim Diajukan" },
-        { name: "Komunitas Peduli Sesama", type: "Komunitas Peduli / Relawan", qty: "10% Target", cap: 100, est: "Mobil Logistik Komunitas", status: "Klaim Diajukan" },
-      ];
-    }
-    if (activeCase.item.toLowerCase().includes("obat")) {
-      return [
-        { name: "Dinas Kesehatan & Puskesmas Wilayah", type: "Instansi Pemerintah", qty: "60% Alokasi", cap: 60, est: "Ambulans Siaga Farmasi", status: "Alokasi Disetujui" },
-        { name: "PMI Unit Pertolongan Pertama", type: "Organisasi Kemanusiaan", qty: "30% Alokasi", cap: 90, est: "Pos Medis Bergerak", status: "Klaim Diajukan" },
-        { name: "Apotek Siaga Tanggap Darurat", type: "Mitra Farmasi / Relawan", qty: "10% Alokasi", cap: 100, est: "Kurir Medis Cepat", status: "Klaim Diajukan" },
-      ];
-    }
-    return [
-      { name: "BPBD Wilayah", type: "Instansi Pemerintah", qty: "50% Target", cap: 50, est: "Truk Tangki No. 02", status: "Alokasi Disetujui" },
-      { name: "PMI Wilayah", type: "Organisasi Kemanusiaan", qty: "30% Target", cap: 80, est: "Mobil Tangki PMI", status: "Klaim Diajukan" },
-      { name: "Komunitas Relawan Dapur Umum", type: "Komunitas Peduli / Relawan", qty: "20% Target", cap: 100, est: "Tandon Bergerak", status: "Klaim Diajukan" },
-    ];
+  // Extract and match records from live database state
+  const matchedBursa = state.bursaList?.find(
+    (b) =>
+      (activeCase?.rawId && b.kebutuhan_id === activeCase.rawId) ||
+      b.kebutuhan?.kode_kasus === activeCase?.id ||
+      b.kebutuhan_id?.toString() === activeCase?.id ||
+      (b.item_bantuan && activeCase?.item && b.item_bantuan.toLowerCase().includes(activeCase.item.toLowerCase()))
+  );
+
+  const matchedMisiList = (state.misiList || []).filter(
+    (m) =>
+      (activeCase?.rawId && m.kebutuhan_id === activeCase.rawId) ||
+      m.kebutuhan?.kode_kasus === activeCase?.id ||
+      m.kebutuhan_id?.toString() === activeCase?.id ||
+      (matchedBursa && m.bursa_id === matchedBursa.id)
+  );
+
+  const matchedOffers = (state.penawaranList || []).filter(
+    (p) =>
+      (activeCase?.rawId && p.kebutuhan_id === activeCase.rawId) ||
+      p.kebutuhan?.kode_kasus === activeCase?.id ||
+      p.kebutuhan_id?.toString() === activeCase?.id ||
+      (matchedBursa && p.bursa_id === matchedBursa.id)
+  );
+
+  // Dynamic Real-time Calculations for Quota Telemetry
+  const parseVolNum = (val?: string) => {
+    if (!val) return 0;
+    const match = val.match(/[\d.,]+/);
+    if (!match) return 0;
+    return parseFloat(match[0].replace(/\./g, "").replace(",", ".")) || 0;
   };
+  const parseVolUnit = (val?: string) => {
+    if (!val) return "Unit";
+    const cleaned = val.replace(/[\d.,\s]+/g, " ").trim();
+    return cleaned || "Unit";
+  };
+
+  const targetVolNum = parseVolNum(activeCase?.qty);
+  const targetVolUnit = parseVolUnit(activeCase?.qty);
+
+  // Sum all mission payload
+  const missionsTotalVol = matchedMisiList.reduce((acc, m) => acc + parseVolNum(m.muatan), 0);
+
+  // Pending claim/offer volume
+  const proposedClaimVol = (matchedOffers.length > 0
+    ? matchedOffers.reduce((acc, p) => acc + parseVolNum(p.jumlah_tawaran), 0)
+    : (matchedBursa?.claimed_volume ? parseVolNum(matchedBursa.claimed_volume) : 0));
+
+  let realizedVolNum = 0;
+  if (activeCase?.status === "Selesai") {
+    realizedVolNum = missionsTotalVol > 0 ? missionsTotalVol : targetVolNum;
+  } else if (missionsTotalVol > 0) {
+    realizedVolNum = missionsTotalVol;
+  } else if (proposedClaimVol > 0) {
+    realizedVolNum = proposedClaimVol;
+  }
+
+  const deficitVolNum = activeCase?.status === "Selesai" ? 0 : Math.max(0, targetVolNum - realizedVolNum);
+  const percentFulfilled = targetVolNum > 0 ? Math.min(100, Math.round((realizedVolNum / targetVolNum) * 100)) : 0;
 
   const caseLat = typeof activeCase.lat === "number" && !isNaN(activeCase.lat) ? activeCase.lat : -7.2654;
   const caseLng = typeof activeCase.lng === "number" && !isNaN(activeCase.lng) ? activeCase.lng : 112.7521;
 
   return (
     <main className="workspace case-detail-workspace">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
         <button className="btn-back-nav" onClick={back} style={{ margin: 0 }}>
           <Icon name="arrow" /> Kembali ke Daftar Kasus
         </button>
@@ -3062,15 +3131,15 @@ function CaseDetail({
         <div style={{ display: "flex", gap: "10px" }}>
           <button 
             type="button" 
+            className="btn-case-action secondary"
             onClick={() => setIsEditOpen(true)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", border: "1px solid #c1c3ac", color: "#013220", padding: "8px 18px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem", transition: "all 0.2s" }}
           >
             <Icon name="edit" /> Ubah Data
           </button>
           <button 
             type="button" 
+            className="btn-case-action danger"
             onClick={() => setIsDeleteOpen(true)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#fff1f0", border: "1px solid #ffa39e", color: "#cf1322", padding: "8px 18px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem", transition: "all 0.2s" }}
           >
             <Icon name="trash" /> Hapus Laporan
           </button>
@@ -3406,24 +3475,28 @@ function CaseDetail({
 
         {/* 3 HIGHLIGHT BOXES */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", marginBottom: "20px" }}>
-          <div style={{ background: "#fbfbf8", padding: "14px 16px", borderRadius: "14px", border: "1px solid rgba(1,50,32,0.08)" }}>
-            <span style={{ fontSize: "11px", color: "#758378", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Target Kebutuhan Bantuan</span>
-            <strong style={{ fontSize: "1.45rem", color: "#013220", fontWeight: 800 }}>{activeCase.qty}</strong>
-            <small style={{ display: "block", color: "#758378", fontSize: "12px", marginTop: "2px" }}>Kategori: <b>{activeCase.item}</b></small>
+          <div style={{ background: "#fbfbf8", padding: "16px 18px", borderRadius: "14px", border: "1px solid rgba(1,50,32,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontSize: "11px", color: "#758378", fontWeight: 700, textTransform: "uppercase", display: "block", marginBottom: "4px", letterSpacing: "0.04em" }}>Target Kebutuhan Warga</span>
+              <strong style={{ fontSize: "1.45rem", color: "#013220", fontWeight: 800, display: "block", lineHeight: 1.2 }}>{activeCase.qty}</strong>
+            </div>
+            <small style={{ display: "block", color: "#6a7369", fontSize: "12px", marginTop: "6px" }}>Kategori: <b style={{ color: "#013220" }}>{activeCase.item}</b></small>
           </div>
 
-          <div style={{ background: "#fbfbf8", padding: "14px 16px", borderRadius: "14px", border: "1px solid rgba(1,50,32,0.08)" }}>
-            <span style={{ fontSize: "11px", color: "#758378", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Tahapan Alur Kasus</span>
-            <strong style={{ fontSize: "1.25rem", color: "#013220", display: "block", margin: "4px 0", fontWeight: 800 }}>
-              {activeCase.status === "Dalam Verifikasi" ? "Dalam Verifikasi" : activeCase.status}
-            </strong>
-            <small style={{ display: "block", color: "#758378", fontSize: "12px" }}>
+          <div style={{ background: "#fbfbf8", padding: "16px 18px", borderRadius: "14px", border: "1px solid rgba(1,50,32,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontSize: "11px", color: "#758378", fontWeight: 700, textTransform: "uppercase", display: "block", marginBottom: "4px", letterSpacing: "0.04em" }}>Tahapan Alur Kasus</span>
+              <strong style={{ fontSize: "1.25rem", color: "#013220", display: "block", margin: "4px 0", fontWeight: 800, lineHeight: 1.2 }}>
+                {activeCase.status === "Dalam Verifikasi" ? "Dalam Verifikasi" : activeCase.status}
+              </strong>
+            </div>
+            <small style={{ display: "block", color: "#6a7369", fontSize: "12px", marginTop: "6px" }}>
               {activeCase.status === "Diajukan" || activeCase.status === "Dalam Verifikasi" 
                 ? "Menunggu peninjauan Posko BPBD" 
                 : activeCase.status === "Kebutuhan Terbuka" 
                   ? "Terbuka bagi mitra & satgas penyalur" 
                   : activeCase.status === "Ditugaskan"
-                    ? "Tim responder telah ditugaskan"
+                    ? "Tim responder resmi ditugaskan"
                     : activeCase.status === "Dalam Pengiriman"
                       ? "Armada logistik dalam pengiriman"
                       : activeCase.status === "Selesai" 
@@ -3432,12 +3505,14 @@ function CaseDetail({
             </small>
           </div>
 
-          <div style={{ background: "#fbfbf8", padding: "14px 16px", borderRadius: "14px", border: "1px solid rgba(1,50,32,0.08)" }}>
-            <span style={{ fontSize: "11px", color: "#758378", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Posko BPBD Penanggung Jawab</span>
-            <strong style={{ fontSize: "0.95rem", color: "#013220", display: "block", lineHeight: 1.4 }}>
-              {activeCase.posko?.split(" - ")[0] || "Posko BPBD Provinsi Jawa Timur (Komando Wilayah)"}
-            </strong>
-            <small style={{ display: "block", color: "#758378", fontSize: "12px", marginTop: "2px" }}>Wilayah: {activeCase.location}</small>
+          <div style={{ background: "#fbfbf8", padding: "16px 18px", borderRadius: "14px", border: "1px solid rgba(1,50,32,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontSize: "11px", color: "#758378", fontWeight: 700, textTransform: "uppercase", display: "block", marginBottom: "4px", letterSpacing: "0.04em" }}>Posko BPBD Penanggung Jawab</span>
+              <strong style={{ fontSize: "0.95rem", color: "#013220", display: "block", lineHeight: 1.35, fontWeight: 700, marginTop: "4px" }}>
+                {activeCase.posko?.split(" - ")[0] || "Posko BPBD Provinsi Jawa Timur (Komando Wilayah)"}
+              </strong>
+            </div>
+            <small style={{ display: "block", color: "#6a7369", fontSize: "12px", marginTop: "6px" }}>Wilayah: {activeCase.location}</small>
           </div>
         </div>
 
@@ -3736,17 +3811,72 @@ function CaseDetail({
         {/* RIGHT COLUMN: RESOURCE ALLOCATION & LOGS */}
         <div className="case-detail-right-col">
           {/* GAMBAR 2 REVISION: TINJAUAN ALOKASI & PENYALUR BANTUAN (LOGIS & MUDAH DIPAHAMI) */}
+          {/* TINJAUAN ALOKASI & PENYALURAN (REAL-TIME, BUSINESS-DRIVEN & DESIGN-SYSTEM COMPLIANT) */}
           <div className="case-section-card">
             <div className="case-section-header">
-              <div className="section-icon-box"><Icon name="box" /></div>
-              <div className="case-section-header-text">
-                <span className="eyebrow">Kesiapan Logistik Wilayah</span>
-                <h3>Tinjauan Alokasi &amp; Penyalur</h3>
-                <small>Kesiapan alokasi pemenuhan bantuan {activeCase.item} dari BPBD &amp; mitra</small>
+              <div className="section-icon-box"><Icon name="task" /></div>
+              <div className="case-section-header-text" style={{ flex: 1 }}>
+                <span className="eyebrow">EKSEKUSI &amp; PENYALURAN LAPANGAN</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
+                  <h3 style={{ margin: 0 }}>Surat Tugas &amp; Armada Distribusi</h3>
+                  <span className={`alloc-telemetry-badge ${
+                    activeCase.status === "Selesai" ? "success" :
+                    activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "waiting" :
+                    activeCase.status === "Dalam Pengiriman" || activeCase.status === "Ditugaskan" ? "progress" :
+                    activeCase.status === "Kebutuhan Terbuka" || activeCase.status === "Klaim Diajukan" ? "waiting" : "pending"
+                  }`}>
+                    {activeCase.status === "Selesai" ? "Penyaluran Tuntas Diserahkan" :
+                     activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "Tiba di Lokasi · Menunggu BAST" :
+                     activeCase.status === "Dalam Pengiriman" ? "Armada Menuju Lokasi" :
+                     activeCase.status === "Ditugaskan" ? "Surat Tugas Aktif" :
+                     activeCase.status === "Klaim Diajukan" ? "Menunggu Persetujuan Proposal" :
+                     activeCase.status === "Kebutuhan Terbuka" ? "Terbuka di Bursa Mitra" :
+                     activeCase.status === "Perlu Klarifikasi" ? "Menunggu Klarifikasi Warga" :
+                     "Triase & Validasi Posko"}
+                  </span>
+                </div>
+                <small>Pelaksana distribusi dan pemantauan pergerakan logistik {activeCase.item} di {activeCase.location}</small>
               </div>
             </div>
 
-            {/* STAGE 1: DALAM VERIFIKASI / DIAJUKAN (BELUM DIAKUI / BELUM DIBUKA KE MITRA) */}
+            {/* STAGE 1A: PERLU KLARIFIKASI */}
+            {activeCase.status === "Perlu Klarifikasi" && (
+              <div className="alloc-callout-card pending" style={{ borderColor: "#d97706", background: "#fffbeb" }}>
+                <div className="alloc-callout-header">
+                  <div className="alloc-callout-icon-box" style={{ background: "#fef3c7", color: "#b45309" }}>
+                    <Icon name="clock" />
+                  </div>
+                  <div className="alloc-callout-title-group">
+                    <div className="alloc-callout-title" style={{ color: "#92400e" }}>
+                      Menunggu Klarifikasi Data dari Pelapor Warga
+                    </div>
+                    <div className="alloc-callout-sub">
+                      Kategori: <strong style={{ color: "#78350f" }}>{activeCase.kategoriKlarifikasi || "Kelengkapan Berkas / Foto"}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="alloc-callout-desc" style={{ color: "#78350f" }}>
+                  {activeCase.pertanyaanKlarifikasi || "Petugas Posko BPBD memerlukan penjelasan tambahan atau foto bukti kondisi fisik sebelum kuota dapat diverifikasi dan dirilis ke Bursa Bantuan."}
+                </p>
+
+                <div className="alloc-meta-grid">
+                  <div className="alloc-meta-tile">
+                    <div className="alloc-tile-header">
+                      <span className="alloc-tile-label">KETENTUAN BERKAS</span>
+                      <span className="alloc-tile-badge warning">{activeCase.memintaLampiran ? "Wajib Foto Pendukung" : "Cukup Penjelasan Teks"}</span>
+                    </div>
+                    <div className="alloc-tile-detail">
+                      <span className="alloc-tile-note">
+                        Warga dapat mengisi tanggapan pada formulir klarifikasi di bawah.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 1B: DALAM VERIFIKASI / DIAJUKAN */}
             {(activeCase.status === "Dalam Verifikasi" || activeCase.status === "Diajukan") && (
               <div className="alloc-callout-card pending">
                 <div className="alloc-callout-header">
@@ -3755,39 +3885,39 @@ function CaseDetail({
                   </div>
                   <div className="alloc-callout-title-group">
                     <div className="alloc-callout-title">
-                      Menunggu Verifikasi &amp; Persetujuan Posko BPBD
+                      Menunggu Verifikasi &amp; Penetapan Alokasi Posko BPBD
                     </div>
                     <div className="alloc-callout-sub">
-                      Status Laporan: <span className="alloc-sub-status">Diajukan (Tahap Verifikasi Awal)</span>
+                      Status Laporan: <span className="alloc-sub-status">Tahap Triase &amp; Validasi Awal</span>
                     </div>
                   </div>
                 </div>
 
                 <p className="alloc-callout-desc">
-                  Laporan kebutuhan individu ini masih dalam tahap peninjauan Posko BPBD. Setelah diverifikasi, posko akan menentukan apakah bantuan disalurkan langsung oleh <strong>Dapur Umum/Logistik BPBD</strong> atau dialokasikan melalui <strong>Mitra Pemberi Bantuan</strong>.
+                  Laporan kebutuhan warga ini sedang dalam proses verifikasi administratif dan faktual oleh petugas posko. Setelah divalidasi, kuota akan dialokasikan langsung dari <strong>Dapur Umum/Logistik BPBD</strong> atau dipublikasikan ke <strong>Bursa Bantuan Terbuka</strong> untuk dipenuhi mitra.
                 </p>
 
                 <div className="alloc-meta-grid">
                   <div className="alloc-meta-tile">
                     <div className="alloc-tile-header">
-                      <span className="alloc-tile-label">STATUS ALOKASI SAAT INI</span>
-                      <span className="alloc-tile-badge warning">Belum Ditentukan</span>
+                      <span className="alloc-tile-label">SKEMA DISTRIBUSI POSKO</span>
+                      <span className="alloc-tile-badge warning">Menunggu Penetapan</span>
                     </div>
                     <div className="alloc-tile-detail">
                       <span className="alloc-tile-note">
-                        <Icon name="clock" /> Menunggu penetapan skema alokasi oleh Posko BPBD
+                        <Icon name="clock" /> Posko BPBD {activeCase.posko?.split(" - ")[0] || "Wilayah"} akan menetapkan skema penyaluran
                       </span>
                     </div>
                   </div>
 
                   <div className="alloc-meta-tile dashed">
                     <div className="alloc-tile-header">
-                      <span className="alloc-tile-label">TARGET PEMENUHAN KEBUTUHAN</span>
+                      <span className="alloc-tile-label">TARGET KEBUTUHAN TERDATA</span>
                       <span className="alloc-category-badge">{activeCase.item}</span>
                     </div>
                     <div className="alloc-tile-detail-row">
                       <strong className="alloc-vol-value">{activeCase.qty}</strong>
-                      <span className="alloc-vol-scope">untuk {activeCase.kk || "1 KK"} terdampak</span>
+                      <span className="alloc-vol-scope">untuk {activeCase.kk || "1 KK"} terdampak di {activeCase.location}</span>
                     </div>
                   </div>
                 </div>
@@ -3795,7 +3925,7 @@ function CaseDetail({
                 {posko && (
                   <div className="alloc-callout-footer">
                     <Button onClick={handleVerify} disabled={isVerifying} className="btn-verify-action">
-                      <Icon name="check" /> {isVerifying ? "Memproses Verifikasi BPBD..." : "Verifikasi & Tetapkan Kesiapan Bantuan"}
+                      <Icon name="check" /> {isVerifying ? "Memproses Verifikasi BPBD..." : "Verifikasi & Rilis ke Bursa Bantuan"}
                     </Button>
                   </div>
                 )}
@@ -3803,32 +3933,49 @@ function CaseDetail({
             )}
 
             {/* STAGE KLAIM MITRA MASUK (MENUNGGU PERSETUJUAN POSKO) */}
-            {activeCase.status === "Klaim Diajukan" && (
-              <div className="alloc-callout-card" style={{ border: "2px solid #ea580c", background: "#fff7ed", padding: "16px", borderRadius: "12px", marginBottom: "14px" }}>
-                <div className="alloc-callout-header">
-                  <div className="alloc-callout-icon-box" style={{ background: "rgba(234, 88, 12, 0.15)", color: "#c2410c" }}>
-                    <Icon name="user" />
+            {(activeCase.status === "Klaim Diajukan" || (matchedOffers.length > 0 && matchedOffers[0].status === "Diajukan")) && (
+              <div className="alloc-mission-card active" style={{ borderColor: "#ea580c" }}>
+                <div className="alloc-mission-top">
+                  <div>
+                    <h4 className="alloc-mission-entity-title" style={{ color: "#9a3412" }}>
+                      {matchedBursa?.claimed_org || matchedOffers[0]?.organisasi || "Mitra Kemanusiaan Terdaftar"}
+                    </h4>
+                    <div className="alloc-mission-entity-sub">
+                      <span>Mitra Terverifikasi REKSA</span>
+                      <span>•</span>
+                      <span>PIC: <strong>{matchedOffers[0]?.mitra_name || matchedBursa?.claimedBy?.name || "Koordinator Relawan"}</strong></span>
+                    </div>
                   </div>
-                  <div className="alloc-callout-title-group">
-                    <div className="alloc-callout-title" style={{ color: "#9a3412", fontWeight: 700 }}>
-                      Klaim Komitmen Bantuan Mitra Masuk
-                    </div>
-                    <div className="alloc-callout-sub" style={{ color: "#7c2d12" }}>
-                      Status: <span style={{ fontWeight: 700, color: "#c2410c" }}>Menunggu Persetujuan Koordinator Posko</span>
-                    </div>
+                  <span className="alloc-mission-status-pill warning">Menunggu Persetujuan Posko</span>
+                </div>
+
+                <div className="alloc-mission-details-grid">
+                  <div className="alloc-mission-detail-item">
+                    <span className="alloc-detail-key">Komitmen Kuota</span>
+                    <strong className="alloc-detail-val" style={{ color: "#c2410c" }}>
+                      {matchedBursa?.claimed_volume || matchedOffers[0]?.jumlah_tawaran || activeCase.qty}
+                    </strong>
+                  </div>
+                  <div className="alloc-mission-detail-item">
+                    <span className="alloc-detail-key">Rencana Armada</span>
+                    <strong className="alloc-detail-val">
+                      {matchedBursa?.claimed_armada || matchedOffers[0]?.armada_info || "Armada Logistik Standar"}
+                    </strong>
                   </div>
                 </div>
-                <p className="alloc-callout-desc" style={{ color: "#7c2d12", fontSize: "0.88rem", margin: "10px 0" }}>
-                  Mitra Bantuan (Satgas BPBD / Relawan / Organisasi Kemanusiaan) telah mengajukan kesiapan bantuan untuk memuat permohonan ini. Setujui alokasi untuk menerbitkan Surat Tugas Misi Penyaluran resmi.
+
+                <p style={{ margin: "8px 0 12px", fontSize: "0.85rem", color: "#7c2d12", lineHeight: 1.45 }}>
+                  Mitra telah mengajukan kesiapan untuk memenuhi kebutuhan ini. Setujui proposal untuk menerbitkan Surat Perintah Tugas Misi resmi.
                 </p>
+
                 {posko && (
-                  <div className="alloc-callout-footer" style={{ marginTop: "12px" }}>
+                  <div style={{ marginTop: "10px" }}>
                     <Button 
                       onClick={handleApproveBursaClaim} 
                       disabled={isApprovingClaim}
-                      style={{ background: "#ea580c", borderColor: "#ea580c", color: "#ffffff" }}
+                      style={{ width: "100%", justifyContent: "center", background: "#ea580c", borderColor: "#ea580c", color: "#ffffff" }}
                     >
-                      <Icon name="check" /> {isApprovingClaim ? "Menerbitkan Misi..." : "Setujui Alokasi & Rilis Surat Misi Mitra"}
+                      <Icon name="check" /> {isApprovingClaim ? "Menerbitkan Misi..." : "Setujui Komitmen & Rilis Surat Misi"}
                     </Button>
                   </div>
                 )}
@@ -3837,81 +3984,242 @@ function CaseDetail({
 
             {/* STAGE 2: KEBUTUHAN TERBUKA (MENUNGGU PENYALUR DARI BPBD / MITRA) */}
             {activeCase.status === "Kebutuhan Terbuka" && (
-              <div className="alloc-callout-card open">
-                <div className="alloc-callout-header">
-                  <div className="alloc-callout-icon-box open">
-                    <Icon name="box" />
-                  </div>
-                  <div className="alloc-callout-title-group">
-                    <div className="alloc-callout-title">
-                      Menunggu Kesiapan Penyalur (BPBD / Mitra)
+              <div className="allocation-list-cards">
+                <div className="alloc-callout-card open">
+                  <div className="alloc-callout-header">
+                    <div className="alloc-callout-icon-box open">
+                      <Icon name="box" />
                     </div>
-                    <div className="alloc-callout-sub">
-                      Status Laporan: <span className="alloc-sub-status open">Kebutuhan Terbuka Resmi</span>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="alloc-callout-desc">
-                  Kebutuhan telah diverifikasi resmi oleh Posko BPBD. Penyaluran siap dipenuhi oleh <strong>Dapur Umum BPBD</strong> maupun <strong>Mitra Pemberi Bantuan (PMI/Donatur)</strong> sejumlah target kebutuhan yang diajukan.
-                </p>
-
-                <div className="alloc-meta-grid">
-                  <div className="alloc-meta-tile">
-                    <div className="alloc-tile-header">
-                      <span className="alloc-tile-label">STATUS ALOKASI PENYALUR</span>
-                      <span className="alloc-tile-badge info">Terbuka untuk Penyalur</span>
-                    </div>
-                    <div className="alloc-tile-detail">
-                      <span className="alloc-tile-note">
-                        <Icon name="box" /> Terbuka untuk Dapur Umum Satgas &amp; Mitra Terdaftar
-                      </span>
+                    <div className="alloc-callout-title-group">
+                      <div className="alloc-callout-title">
+                        Terbuka di Bursa Bantuan Kemitraan
+                      </div>
+                      <div className="alloc-callout-sub">
+                        Status Publikasi: <span className="alloc-sub-status open">Kebutuhan Terverifikasi Resmi</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="alloc-meta-tile dashed">
-                    <div className="alloc-tile-header">
-                      <span className="alloc-tile-label">TARGET PEMENUHAN RESMI</span>
-                      <span className="alloc-category-badge">{activeCase.item}</span>
-                    </div>
-                    <div className="alloc-tile-detail-row">
-                      <strong className="alloc-vol-value">{activeCase.qty}</strong>
-                      <span className="alloc-vol-scope">untuk {activeCase.kk || "1 KK"} terdampak</span>
+                  <p className="alloc-callout-desc">
+                    Laporan telah divalidasi oleh Posko BPBD dan kuota <strong>{activeCase.qty} {activeCase.item}</strong> saat ini terbuka untuk diklaim oleh <strong>Dapur Umum BPBD</strong> maupun <strong>Mitra Kemanusiaan Terdaftar (PMI, Baznas, Relawan)</strong>.
+                  </p>
+
+                  <div className="alloc-meta-grid">
+                    <div className="alloc-meta-tile">
+                      <div className="alloc-tile-header">
+                        <span className="alloc-tile-label">STATUS BURSA REKSA</span>
+                        <span className="alloc-tile-badge info">Menunggu Klaim Mitra</span>
+                      </div>
+                      <div className="alloc-tile-detail">
+                        <span className="alloc-tile-note">
+                          <Icon name="box" /> Terbuka bagi seluruh mitra penanggulangan bencana
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* STAGE 3: DITUGASKAN / DALAM PENGIRIMAN / SELESI */}
-            {activeCase.status !== "Dalam Verifikasi" && activeCase.status !== "Diajukan" && activeCase.status !== "Kebutuhan Terbuka" && (
-              <div className="allocation-list-cards" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div className="alloc-item-card allocated" style={{ background: "#ffffff", border: "1px solid #d4dfd6", borderRadius: "10px", padding: "12px 14px" }}>
-                  <div className="alloc-item-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <div>
-                      <strong style={{ color: "#013220", fontSize: "0.92rem", display: "block" }}>Dapur Umum &amp; Satgas BPBD Wilayah</strong>
-                      <small style={{ color: "#758378", fontSize: "0.8rem" }}>Penyalur Utama Pemerintah · Posko Wilayah</small>
-                    </div>
-                    <span className="alloc-pill done" style={{ background: "#eef6f0", color: "#15803d", fontWeight: 700, fontSize: "0.78rem", padding: "3px 10px", borderRadius: "20px", border: "1px solid #b2d7bb" }}>
-                      {activeCase.status === "Selesai" ? "Tuntas Disalurkan" : "Alokasi Disetujui"}
-                    </span>
-                  </div>
+            {/* STAGE 3, 4, 5: DITUGASKAN / DALAM PENGIRIMAN / MENUNGGU BAST / SELESAI */}
+            {activeCase.status !== "Dalam Verifikasi" && activeCase.status !== "Diajukan" && activeCase.status !== "Perlu Klarifikasi" && activeCase.status !== "Kebutuhan Terbuka" && activeCase.status !== "Klaim Diajukan" && (
+              <div className="allocation-list-cards">
+                {/* RENDER REAL-TIME MISSIONS FROM DATABASE */}
+                {matchedMisiList.length > 0 ? (
+                  matchedMisiList.map((m) => (
+                    <div key={m.id} className={`alloc-mission-card ${activeCase.status === "Selesai" || m.status_tahapan === "Selesai" ? "completed" : "active"}`}>
+                      <div className="alloc-mission-top">
+                        <div>
+                          <h4 className="alloc-mission-entity-title">{m.organisasi || "Satgas Reaksi Cepat BPBD Wilayah"}</h4>
+                          <div className="alloc-mission-entity-sub">
+                            <span>Surat Misi:</span>
+                            <span className="alloc-mission-code-badge">{m.kode_misi}</span>
+                            <span>•</span>
+                            <span>Posko Wilayah</span>
+                          </div>
+                        </div>
+                        <span className={`alloc-mission-status-pill ${
+                          m.status_tahapan === "Selesai" || activeCase.status === "Selesai" ? "success" :
+                          m.status_tahapan === "Tiba di Lokasi & Diserahkan" || activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "info" :
+                          m.status_tahapan === "Dalam Perjalanan" || activeCase.status === "Dalam Pengiriman" ? "warning" : "info"
+                        }`}>
+                          {m.status_tahapan === "Selesai" || activeCase.status === "Selesai" ? "Tuntas Disalurkan" :
+                           m.status_tahapan === "Tiba di Lokasi & Diserahkan" || activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "Tiba di Lokasi (BAST)" :
+                           m.status_tahapan === "Dalam Perjalanan" || activeCase.status === "Dalam Pengiriman" ? "Dalam Pengiriman (OTW)" :
+                           "Penugasan Aktif"}
+                        </span>
+                      </div>
 
-                  <div className="alloc-item-bottom" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", borderTop: "1px dashed rgba(1,50,32,0.1)", paddingTop: "8px" }}>
-                    <span className="alloc-qty-tag" style={{ fontWeight: 700, color: "#013220" }}>Volume: {activeCase.qty}</span>
-                    <span style={{ color: "#15803d", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}><Icon name="check" /> Terverifikasi BPBD</span>
-                  </div>
-                </div>
+                      <div className="alloc-mission-details-grid">
+                        <div className="alloc-mission-detail-item">
+                          <span className="alloc-detail-key">Muatan Penyaluran</span>
+                          <strong className="alloc-detail-val" style={{ color: "#013220" }}>{m.muatan || activeCase.qty}</strong>
+                        </div>
+                        <div className="alloc-mission-detail-item">
+                          <span className="alloc-detail-key">Armada Kendaraan</span>
+                          <strong className="alloc-detail-val">{m.armada_info || "Mobil Operasional Distribusi"}</strong>
+                        </div>
+                        <div className="alloc-mission-detail-item">
+                          <span className="alloc-detail-key">Petugas Pelaksana</span>
+                          <strong className="alloc-detail-val">{m.responder_name || "Satgas Lapangan BPBD"}</strong>
+                        </div>
+                        <div className="alloc-mission-detail-item">
+                          <span className="alloc-detail-key">Estimasi Jadwal</span>
+                          <strong className="alloc-detail-val">{m.estimasi_waktu || "Sesuai Jadwal Operasional"}</strong>
+                        </div>
+                      </div>
 
-                <div className="alloc-item-card" style={{ background: "#fbfbf8", border: "1px solid #e2ded4", borderRadius: "10px", padding: "10px 14px" }}>
-                  <div className="alloc-item-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <strong style={{ color: "#48554a", fontSize: "0.88rem", display: "block" }}>PMI &amp; Relawan Pendukung</strong>
-                      <small style={{ color: "#758378", fontSize: "0.78rem" }}>Mitra Kemanusiaan Terdaftar</small>
+                      {/* FIELD OBSTACLE CALLOUT IF PRESENT */}
+                      {m.status_kendala && (
+                        <div style={{ background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "8px", padding: "8px 12px", margin: "8px 0", fontSize: "0.82rem", color: "#9f1239" }}>
+                          <strong>Laporan Kendala Lapangan:</strong> [{m.status_kendala}] {m.catatan_lapangan}
+                        </div>
+                      )}
+
+                      {/* 4-STEP DELIVERY TRACKER STEPPER */}
+                      <div className="alloc-mission-stepper">
+                        <div className="alloc-step-node passed">
+                          <div className="alloc-step-circle">✓</div>
+                          <span className="alloc-step-lbl">1. Surat Terbit</span>
+                        </div>
+                        <div className={`alloc-step-node ${
+                          m.status_tahapan === "Muat Logistik" || m.status_tahapan === "Menunggu Persiapan" ? "active" : "passed"
+                        }`}>
+                          <div className="alloc-step-circle">
+                            {m.status_tahapan !== "Menunggu Persiapan" && m.status_tahapan !== "Muat Logistik" ? "✓" : "2"}
+                          </div>
+                          <span className="alloc-step-lbl">2. Muat Barang</span>
+                        </div>
+                        <div className={`alloc-step-node ${
+                          m.status_tahapan === "Dalam Perjalanan" || activeCase.status === "Dalam Pengiriman" ? "active" :
+                          m.status_tahapan === "Tiba di Lokasi & Diserahkan" || m.status_tahapan === "Selesai" || activeCase.status === "Selesai" ? "passed" : ""
+                        }`}>
+                          <div className="alloc-step-circle">
+                            {m.status_tahapan === "Tiba di Lokasi & Diserahkan" || m.status_tahapan === "Selesai" || activeCase.status === "Selesai" ? "✓" : "3"}
+                          </div>
+                          <span className="alloc-step-lbl">3. Pengiriman</span>
+                        </div>
+                        <div className={`alloc-step-node ${
+                          m.status_tahapan === "Selesai" || activeCase.status === "Selesai" ? "passed" :
+                          m.status_tahapan === "Tiba di Lokasi & Diserahkan" || activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "active" : ""
+                        }`}>
+                          <div className="alloc-step-circle">
+                            {m.status_tahapan === "Selesai" || activeCase.status === "Selesai" ? "✓" : "4"}
+                          </div>
+                          <span className="alloc-step-lbl">4. Selesai</span>
+                        </div>
+                      </div>
+
+                      {/* RECEIPT CONFIRMATION BUTTON IF ARRIVED AT DESTINATION */}
+                      {(m.status_tahapan === "Tiba di Lokasi & Diserahkan" || activeCase.status === "Menunggu Konfirmasi Penerimaan") && (
+                        <div style={{ marginTop: "14px" }}>
+                          <Button 
+                            onClick={handleConfirmReceived} 
+                            style={{ width: "100%", justifyContent: "center", background: "#15803d", borderColor: "#15803d", color: "#ffffff", fontWeight: 700 }}
+                          >
+                            <Icon name="check" /> Konfirmasi Penerimaan Fisik Bantuan (BAST Tuntas)
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* COMPLETED BANNER IF RESOLVED */}
+                      {(activeCase.status === "Selesai" || m.status_tahapan === "Selesai") && (
+                        <div style={{ marginTop: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.82rem" }}>
+                          <span style={{ color: "#15803d", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                            <Icon name="check" /> Fisik Bantuan Diterima Lengkap Warga
+                          </span>
+                          <span style={{ color: "#166534", fontWeight: 600 }}>Volume: {m.jumlah_diterima || m.muatan || activeCase.qty}</span>
+                        </div>
+                      )}
                     </div>
-                    <span style={{ color: "#52c41a", fontSize: "0.8rem", fontWeight: 600 }}>Siaga Distribusi</span>
+                  ))
+                ) : (
+                  /* FALLBACK FOR DIRECT CASE ALLOCATION */
+                  <div className={`alloc-mission-card ${activeCase.status === "Selesai" ? "completed" : "active"}`}>
+                    <div className="alloc-mission-top">
+                      <div>
+                        <h4 className="alloc-mission-entity-title">{activeCase.posko?.split(" - ")[0] || "Satgas Reaksi Cepat BPBD Wilayah"}</h4>
+                        <div className="alloc-mission-entity-sub">
+                          <span>Surat Tugas:</span>
+                          <span className="alloc-mission-code-badge">MISI-POSKO-01</span>
+                          <span>•</span>
+                          <span>Penyalur Utama Terverifikasi</span>
+                        </div>
+                      </div>
+                      <span className={`alloc-mission-status-pill ${
+                        activeCase.status === "Selesai" ? "success" :
+                        activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "info" :
+                        activeCase.status === "Dalam Pengiriman" ? "warning" : "info"
+                      }`}>
+                        {activeCase.status === "Selesai" ? "Tuntas Disalurkan" :
+                         activeCase.status === "Menunggu Konfirmasi Penerimaan" ? "Tiba di Lokasi (BAST)" :
+                         activeCase.status === "Dalam Pengiriman" ? "Dalam Perjalanan (OTW)" :
+                         "Alokasi Disetujui"}
+                      </span>
+                    </div>
+
+                    <div className="alloc-mission-details-grid">
+                      <div className="alloc-mission-detail-item">
+                        <span className="alloc-detail-key">Muatan Penyaluran</span>
+                        <strong className="alloc-detail-val" style={{ color: "#013220" }}>{activeCase.qty}</strong>
+                      </div>
+                      <div className="alloc-mission-detail-item">
+                        <span className="alloc-detail-key">Armada Distribusi</span>
+                        <strong className="alloc-detail-val">Armada Logistik Siaga Posko</strong>
+                      </div>
+                      <div className="alloc-mission-detail-item">
+                        <span className="alloc-detail-key">Tim Pelaksana</span>
+                        <strong className="alloc-detail-val">Satgas Posko BPBD &amp; Relawan</strong>
+                      </div>
+                      <div className="alloc-mission-detail-item">
+                        <span className="alloc-detail-key">Wilayah Distribusi</span>
+                        <strong className="alloc-detail-val">{activeCase.location}</strong>
+                      </div>
+                    </div>
+
+                    {activeCase.status === "Menunggu Konfirmasi Penerimaan" && (
+                      <div style={{ marginTop: "14px" }}>
+                        <Button 
+                          onClick={handleConfirmReceived} 
+                          style={{ width: "100%", justifyContent: "center", background: "#15803d", borderColor: "#15803d", color: "#ffffff", fontWeight: 700 }}
+                        >
+                          <Icon name="check" /> Konfirmasi Penerimaan Fisik Bantuan (BAST Tuntas)
+                        </Button>
+                      </div>
+                    )}
+
+                    {activeCase.status === "Selesai" && (
+                      <div style={{ marginTop: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.82rem" }}>
+                        <span style={{ color: "#15803d", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                          <Icon name="check" /> Fisik Bantuan Diterima Lengkap Warga
+                        </span>
+                        <span style={{ color: "#166534", fontWeight: 600 }}>Volume: {activeCase.qty}</span>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
+
+                {/* SISA KUOTA DEFISIT JIKA ALOKASI PARSIAL */}
+                {deficitVolNum > 0 && matchedMisiList.length > 0 && activeCase.status !== "Selesai" && (
+                  <div className="alloc-callout-card open" style={{ marginTop: "10px", borderColor: "#0f766e" }}>
+                    <div className="alloc-callout-header">
+                      <div className="alloc-callout-icon-box open">
+                        <Icon name="box" />
+                      </div>
+                      <div className="alloc-callout-title-group">
+                        <div className="alloc-callout-title" style={{ color: "#0f766e" }}>
+                          Sisa Defisit Terbuka di Bursa: {deficitVolNum} {targetVolUnit}
+                        </div>
+                        <div className="alloc-callout-sub">
+                          Alokasi Parsial: <span className="alloc-sub-status open">{missionsTotalVol} {targetVolUnit} Teralokasi</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="alloc-callout-desc" style={{ color: "#134e4a" }}>
+                      Sebagian kuota ({missionsTotalVol} {targetVolUnit}) sedang dalam proses penyaluran oleh armada di atas. Sisa kebutuhan <strong>{deficitVolNum} {targetVolUnit}</strong> tetap dipublikasikan di Bursa Bantuan Terbuka agar dipenuhi oleh organisasi/mitra penyangga lainnya.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -4898,20 +5206,19 @@ function ResponderDashboard({ state, setPage, notify, onRefresh }: {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "14px", textAlign: "left" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "6px", color: "var(--forest)" }}>
+              <label className="reksa-form-label">
                 Nama Organisasi / Satgas Penyalur
               </label>
               <input 
                 type="text" 
                 value={claimedOrg} 
                 onChange={(e) => setClaimedOrg(e.target.value)} 
-                className="input-box" 
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #c1c3ac", fontSize: "0.9rem" }}
+                className="reksa-input-field" 
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "6px", color: "var(--forest)" }}>
+              <label className="reksa-form-label">
                 Informasi Armada Siaga &amp; Kapasitas
               </label>
               <input 
@@ -4919,12 +5226,12 @@ function ResponderDashboard({ state, setPage, notify, onRefresh }: {
                 value={claimedArmada} 
                 onChange={(e) => setClaimedArmada(e.target.value)} 
                 placeholder="Contoh: Truk Tangki No. 02 · Kapasitas 500 L" 
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #c1c3ac", fontSize: "0.9rem" }}
+                className="reksa-input-field"
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "6px", color: "var(--forest)" }}>
+              <label className="reksa-form-label">
                 Volume Bantuan yang Disanggupi
               </label>
               <input 
@@ -4932,19 +5239,19 @@ function ResponderDashboard({ state, setPage, notify, onRefresh }: {
                 value={claimedVolume} 
                 onChange={(e) => setClaimedVolume(e.target.value)} 
                 placeholder={`Target: ${claimModalBursa.target_volume}`}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #c1c3ac", fontSize: "0.9rem" }}
+                className="reksa-input-field"
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "6px", color: "var(--forest)" }}>
+              <label className="reksa-form-label">
                 Catatan / Rencana Operasional Penyaluran
               </label>
               <textarea 
                 value={claimNotes} 
                 onChange={(e) => setClaimNotes(e.target.value)} 
                 rows={3} 
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #c1c3ac", fontSize: "0.9rem", resize: "vertical" }}
+                className="reksa-textarea-field"
               />
             </div>
           </div>
@@ -5991,6 +6298,7 @@ export default function App() {
 
             return {
               id: caseCode,
+              rawId: item.id,
               item: item.kategori_kebutuhan || "Kebutuhan Darurat",
               location: locStr,
               kk: `${item.jumlah_kk || 1} KK`,

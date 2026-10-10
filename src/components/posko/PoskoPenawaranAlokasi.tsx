@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CaseRecord } from "../../App";
 import { BursaItem, PenawaranItem, apiService } from "../../services/api";
+import { AppIcon } from "../common/Icons";
 
 interface PoskoPenawaranAlokasiProps {
   penawaranList: PenawaranItem[];
@@ -23,7 +24,6 @@ export function PoskoPenawaranAlokasi({
 
   // Approval / Rejection modal
   const [activeOffer, setActiveOffer] = useState<PenawaranItem | null>(null);
-  const [activeBursa, setActiveBursa] = useState<BursaItem | null>(null);
   const [modalType, setModalType] = useState<"approvePartial" | "reject" | null>(null);
   const [partialAmountInput, setPartialAmountInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
@@ -32,13 +32,12 @@ export function PoskoPenawaranAlokasi({
   // Combine PenawaranMitra list with pending claims from bursaList (if not already represented)
   const syntheticOffers: PenawaranItem[] = [...penawaranList];
 
-  // Include pending legacy claims from bursaList if they don't have a penawaran yet
   bursaList.forEach((b) => {
     if (b.status === "Klaim Diajukan" && b.claimed_org) {
       const alreadyExists = penawaranList.some((p) => p.bursa_id === b.id && p.status === "Diajukan");
       if (!alreadyExists) {
         syntheticOffers.push({
-          id: b.id, // mapped to bursa id
+          id: b.id,
           kode_penawaran: `PROP-${b.id}`,
           bursa_id: b.id,
           kebutuhan_id: b.kebutuhan_id,
@@ -70,7 +69,6 @@ export function PoskoPenawaranAlokasi({
     try {
       setIsSubmitting(true);
       if (offer.kode_penawaran.startsWith("PROP-")) {
-        // Legacy bursa claim
         await apiService.approveClaimBursa(offer.bursa_id, {
           approved_volume: offer.jumlah_tawaran,
           catatan: "Disetujui penuh oleh Koordinator Posko. Alokasi resmi diterbitkan.",
@@ -104,18 +102,18 @@ export function PoskoPenawaranAlokasi({
     setNotesInput("");
   };
 
-  const handleExecuteModal = async () => {
+  const handleModalSubmit = async () => {
     if (!activeOffer) return;
     try {
       setIsSubmitting(true);
       if (modalType === "approvePartial") {
-        const approvedNum = parseInt(partialAmountInput) || activeOffer.volume_angka;
+        const approvedNum = parseInt(partialAmountInput) || 100;
         const approvedStr = `${approvedNum} ${activeOffer.satuan || "Unit"}`;
 
         if (activeOffer.kode_penawaran.startsWith("PROP-")) {
           await apiService.approveClaimBursa(activeOffer.bursa_id, {
             approved_volume: approvedStr,
-            catatan: notesInput || `Disetujui sebagian (${approvedStr}).`,
+            catatan: notesInput || `Disetujui sebagian (${approvedStr}) oleh Koordinator Posko.`,
           });
         } else {
           await apiService.approvePenawaran(activeOffer.id, {
@@ -145,66 +143,110 @@ export function PoskoPenawaranAlokasi({
     }
   };
 
+  const pendingOffersCount = syntheticOffers.filter((o) => o.status === "Diajukan").length;
+  const approvedOffersCount = syntheticOffers.filter((o) => o.status === "Disetujui").length;
+  const rejectedOffersCount = syntheticOffers.filter((o) => o.status === "Ditolak").length;
+
   return (
-    <main className="workspace posko-penawaran-workspace">
-      <div className="workspace-title">
+    <main className="workspace posko-penawaran-workspace" style={{ maxWidth: "1280px", margin: "0 auto", padding: "28px 24px" }}>
+      {/* Title bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "24px" }}>
         <div>
-          <span className="eyebrow">Keputusan Alokasi Resmi (PRD Bab 5.1 &amp; 5.2 Tahap 7)</span>
-          <h1>Penawaran &amp; Alokasi Bantuan Mitra</h1>
-          <p>
-            Tinjau tawaran logistik dan armada dari Organisasi Kemanusiaan, setujui alokasi resmi (penuh atau sebagian), atau tolak secara transparan.
+          <span className="eyebrow" style={{ color: "#80866e", fontWeight: 700, letterSpacing: "0.05em", fontSize: "0.78rem" }}>
+            KEPUTUSAN ALOKASI RESMI POSKO
+          </span>
+          <h1 style={{ margin: "4px 0 6px", color: "#013220", fontSize: "1.75rem", fontWeight: 800 }}>
+            Penawaran &amp; Alokasi Bantuan Mitra
+          </h1>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "0.92rem", maxWidth: "680px", lineHeight: 1.5 }}>
+            Tinjau proposal komitmen logistik dan kapasitas armada dari organisasi mitra, tetapkan persetujuan resmi, dan terbitkan Surat Misi Penyaluran.
           </p>
         </div>
         <button
           type="button"
-          className="btn btn-secondary"
           onClick={onNavigateToMissions}
+          style={{
+            background: "#ffffff",
+            color: "#013220",
+            border: "1px solid rgba(1, 50, 32, 0.2)",
+            borderRadius: "10px",
+            padding: "10px 18px",
+            fontSize: "0.88rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
         >
-          Pantau Misi Armada Aktif →
+          <AppIcon name="truck" size={16} />
+          <span>Pantau Misi Armada Aktif</span>
+          <AppIcon name="arrow-right" size={14} />
         </button>
       </div>
 
       {/* FILTER TABS */}
-      <div className="cases-pill-filters" style={{ marginBottom: "24px" }}>
-        <button
-          type="button"
-          className={`case-filter-btn ${tab === "pending" ? "active" : ""}`}
-          onClick={() => setTab("pending")}
-        >
-          Menunggu Keputusan ({syntheticOffers.filter((o) => o.status === "Diajukan").length})
-        </button>
-        <button
-          type="button"
-          className={`case-filter-btn ${tab === "approved" ? "active" : ""}`}
-          onClick={() => setTab("approved")}
-        >
-          Disetujui ({syntheticOffers.filter((o) => o.status === "Disetujui").length})
-        </button>
-        <button
-          type="button"
-          className={`case-filter-btn ${tab === "rejected" ? "active" : ""}`}
-          onClick={() => setTab("rejected")}
-        >
-          Ditolak ({syntheticOffers.filter((o) => o.status === "Ditolak").length})
-        </button>
-        <button
-          type="button"
-          className={`case-filter-btn ${tab === "all" ? "active" : ""}`}
-          onClick={() => setTab("all")}
-        >
-          Semua ({syntheticOffers.length})
-        </button>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          flexWrap: "wrap",
+          marginBottom: "24px",
+          background: "#ffffff",
+          padding: "10px 16px",
+          borderRadius: "14px",
+          border: "1px solid rgba(1, 50, 32, 0.08)",
+        }}
+      >
+        {[
+          { id: "pending", label: "Menunggu Keputusan", count: pendingOffersCount },
+          { id: "approved", label: "Disetujui", count: approvedOffersCount },
+          { id: "rejected", label: "Ditolak", count: rejectedOffersCount },
+          { id: "all", label: "Semua", count: syntheticOffers.length },
+        ].map((t) => {
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id as any)}
+              style={{
+                padding: "7px 16px",
+                borderRadius: "20px",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                border: isActive ? "1px solid #013220" : "1px solid #e2e8f0",
+                background: isActive ? "#013220" : "#ffffff",
+                color: isActive ? "#ffffff" : "#475569",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {t.label} ({t.count})
+            </button>
+          );
+        })}
       </div>
 
       {/* OFFERS LIST */}
       {filteredOffers.length === 0 ? (
-        <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: "18px", padding: "48px 24px", textAlign: "center" }}>
-          <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(1, 50, 32, 0.08)", color: "var(--forest)", display: "grid", placeItems: "center", margin: "0 auto 16px", fontSize: "20px" }}>
-            🤝
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            border: "1px dashed #cbd5e1",
+            padding: "48px 24px",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(1,50,32,0.06)", color: "#013220", display: "grid", placeItems: "center", margin: "0 auto 12px" }}>
+            <AppIcon name="handshake" size={24} />
           </div>
-          <h3 style={{ color: "var(--forest)", margin: "0 0 8px" }}>Tidak Ada Penawaran di Kategori Ini</h3>
-          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-            Belum ada proposal bantuan yang diajukan oleh mitra atau telah diproses posko.
+          <h3 style={{ margin: "0 0 6px", color: "#013220", fontSize: "1.1rem", fontWeight: 700 }}>
+            Tidak Ada Penawaran di Kategori Ini
+          </h3>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "0.88rem" }}>
+            Belum ada proposal bantuan yang diajukan oleh mitra pada status ini.
           </p>
         </div>
       ) : (
@@ -219,71 +261,124 @@ export function PoskoPenawaranAlokasi({
                 key={o.id}
                 style={{
                   background: "#ffffff",
-                  border: isPending ? "1.5px solid rgba(217, 119, 6, 0.4)" : "1px solid var(--line)",
-                  borderRadius: "18px",
-                  padding: "22px 26px",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.02)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
+                  borderRadius: "16px",
+                  border: isApproved
+                    ? "1px solid #bbf7d0"
+                    : isRejected
+                    ? "1px solid #fecaca"
+                    : "1px solid #fde68a",
+                  boxShadow: "0 2px 8px rgba(1, 50, 32, 0.03)",
+                  padding: "20px 24px",
                 }}
               >
-                {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                {/* Header Row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "14px" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                      <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--forest)", fontFamily: "monospace" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "6px" }}>
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontWeight: 800,
+                          fontSize: "0.95rem",
+                          color: "#013220",
+                          background: "#f1f5f2",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                        }}
+                      >
                         {o.kode_penawaran}
                       </span>
                       <span
                         style={{
-                          fontSize: "0.78rem",
+                          fontSize: "0.75rem",
                           fontWeight: 700,
                           padding: "3px 10px",
                           borderRadius: "12px",
-                          background: isApproved ? "rgba(16, 185, 129, 0.15)" : isRejected ? "rgba(239, 68, 68, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                          color: isApproved ? "#047857" : isRejected ? "#b91c1c" : "#b45309",
+                          background: isApproved ? "#f0fdf4" : isRejected ? "#fef2f2" : "#fffbeb",
+                          color: isApproved ? "#15803d" : isRejected ? "#991b1b" : "#b45309",
+                          border: `1px solid ${isApproved ? "#bbf7d0" : isRejected ? "#fecaca" : "#fde68a"}`,
                         }}
                       >
-                        Status: {o.status}
+                        {o.status}
                       </span>
                     </div>
-                    <h3 style={{ margin: "2px 0 4px", fontSize: "1.2rem", color: "var(--ink)", fontWeight: 700 }}>
+
+                    <h3 style={{ margin: "0 0 6px", fontSize: "1.2rem", fontWeight: 800, color: "#013220" }}>
                       {o.organisasi} · Penawaran: {o.jumlah_tawaran}
                     </h3>
-                    <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-                      Item: <b>{o.jenis_bantuan}</b> · PIC: {o.mitra_name}
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", fontSize: "0.82rem", color: "#64748b" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="box" size={13} style={{ color: "#80866e" }} />
+                        <span>Komoditas: <strong>{o.jenis_bantuan}</strong></span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="user" size={13} style={{ color: "#80866e" }} />
+                        <span>Narahubung: <strong>{o.mitra_name}</strong></span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="calendar" size={13} style={{ color: "#80866e" }} />
+                        <span>Diajukan: {new Date(o.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+                      </span>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                     {isPending && (
                       <>
                         <button
                           type="button"
-                          className="btn btn-primary"
-                          style={{ padding: "8px 16px", minHeight: "38px", fontSize: "0.85rem", background: "#047857" }}
                           disabled={isSubmitting}
                           onClick={() => handleApproveFull(o)}
+                          style={{
+                            background: "#013220",
+                            color: "#ffffff",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
                         >
-                          ✓ Setujui Penuh
+                          <AppIcon name="check" size={14} />
+                          <span>Setujui Penuh</span>
                         </button>
                         <button
                           type="button"
-                          className="btn btn-secondary"
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem", borderColor: "#1d4ed8", color: "#1d4ed8" }}
                           disabled={isSubmitting}
                           onClick={() => openPartialModal(o)}
+                          style={{
+                            background: "#fffbeb",
+                            color: "#92400e",
+                            border: "1px solid #fde68a",
+                            borderRadius: "8px",
+                            padding: "8px 14px",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
                         >
                           Setujui Sebagian
                         </button>
                         <button
                           type="button"
-                          className="btn btn-secondary"
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem", borderColor: "#ef4444", color: "#dc2626" }}
                           disabled={isSubmitting}
                           onClick={() => openRejectModal(o)}
+                          style={{
+                            background: "#fef2f2",
+                            color: "#991b1b",
+                            border: "1px solid #fecaca",
+                            borderRadius: "8px",
+                            padding: "8px 12px",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
                         >
                           Tolak
                         </button>
@@ -291,60 +386,87 @@ export function PoskoPenawaranAlokasi({
                     )}
 
                     {isApproved && (
-                      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#047857", padding: "6px 12px", background: "rgba(16, 185, 129, 0.1)", borderRadius: "8px" }}>
-                        ✓ Alokasi Sah ({o.jumlah_disetujui || o.jumlah_tawaran})
+                      <span style={{ padding: "6px 14px", borderRadius: "8px", background: "#f0fdf4", color: "#15803d", fontWeight: 700, fontSize: "0.84rem", border: "1px solid #bbf7d0", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        <AppIcon name="check" size={14} />
+                        <span>Alokasi Sah ({o.jumlah_disetujui || o.jumlah_tawaran})</span>
                       </span>
                     )}
 
                     {isRejected && (
-                      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#dc2626", padding: "6px 12px", background: "rgba(239, 68, 68, 0.1)", borderRadius: "8px" }}>
-                        ✕ Ditolak
+                      <span style={{ padding: "6px 14px", borderRadius: "8px", background: "#fef2f2", color: "#991b1b", fontWeight: 700, fontSize: "0.84rem", border: "1px solid #fecaca" }}>
+                        Ditolak Posko
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Logistics details */}
+                {/* Details Grid (clean 4-column layout) */}
                 <div
                   style={{
+                    background: "#fbfbf8",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(1, 50, 32, 0.08)",
+                    padding: "14px 18px",
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "10px",
-                    background: "#f8fafc",
-                    padding: "12px 16px",
-                    borderRadius: "10px",
-                    fontSize: "0.86rem",
+                    gap: "12px",
+                    marginBottom: "12px",
                   }}
                 >
                   <div>
-                    <span style={{ color: "var(--muted)", display: "block" }}>Metode Penyaluran:</span>
-                    <strong style={{ color: "var(--forest)" }}>
-                      {o.metode_penyaluran || (o.armada_info ? "Pengiriman Mandiri (Armada Sendiri)" : "Diserahkan ke Gudang / Posko BPBD (Tanpa Armada Mandiri)")}
+                    <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#80866e", textTransform: "uppercase", display: "block", marginBottom: "2px" }}>
+                      Metode Penyaluran
+                    </span>
+                    <strong style={{ fontSize: "0.88rem", color: "#013220" }}>
+                      {o.metode_penyaluran === "mandiri"
+                        ? "Penyaluran Mandiri (Armada Mitra)"
+                        : o.metode_penyaluran === "koordinasi"
+                        ? "Penyaluran Terkoordinasi Bersama Posko"
+                        : "Serah Terima ke Gudang Posko BPBD"}
                     </strong>
                   </div>
-                  {o.armada_info && (
-                    <div>
-                      <span style={{ color: "var(--muted)", display: "block" }}>Dukungan Armada:</span>
-                      <strong>{o.armada_info}</strong>
-                    </div>
-                  )}
+
                   <div>
-                    <span style={{ color: "var(--muted)", display: "block" }}>Waktu Kesiapan:</span>
-                    <strong>{o.waktu_kesiapan || "Siap Disalurkan"}</strong>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#80866e", textTransform: "uppercase", display: "block", marginBottom: "2px" }}>
+                      Dukungan Armada
+                    </span>
+                    <strong style={{ fontSize: "0.88rem", color: "#013220" }}>
+                      {o.armada_info || "Armada Mitra Siaga"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#80866e", textTransform: "uppercase", display: "block", marginBottom: "2px" }}>
+                      Waktu Kesiapan
+                    </span>
+                    <strong style={{ fontSize: "0.88rem", color: "#013220" }}>
+                      {o.waktu_kesiapan || "Siap Berangkat Hari Ini"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#80866e", textTransform: "uppercase", display: "block", marginBottom: "2px" }}>
+                      Volume Komitmen
+                    </span>
+                    <strong style={{ fontSize: "0.95rem", color: "#15803d" }}>
+                      {o.jumlah_tawaran}
+                    </strong>
                   </div>
                 </div>
 
-                {/* Notes */}
+                {/* Operational Notes */}
                 {o.catatan && (
-                  <div style={{ fontSize: "0.86rem", color: "#334155", background: "#f1f5f9", padding: "10px 14px", borderRadius: "8px" }}>
-                    <b>Catatan Mitra:</b> {o.catatan}
-                  </div>
-                )}
-
-                {/* If rejected, show reason */}
-                {isRejected && o.alasan_penolakan && (
-                  <div style={{ fontSize: "0.86rem", color: "#b91c1c", background: "rgba(239, 68, 68, 0.1)", padding: "10px 14px", borderRadius: "8px" }}>
-                    <b>Alasan Penolakan Posko:</b> {o.alasan_penolakan}
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                      padding: "10px 14px",
+                      fontSize: "0.83rem",
+                      color: "#334155",
+                    }}
+                  >
+                    <strong style={{ color: "#013220" }}>Rencana Kerja Mitra:</strong> "{o.catatan}"
                   </div>
                 )}
               </div>
@@ -353,76 +475,99 @@ export function PoskoPenawaranAlokasi({
         </div>
       )}
 
-      {/* MODAL APPROVE PARTIAL / REJECT */}
+      {/* PARTIAL APPROVE / REJECT MODAL */}
       {modalType && activeOffer && (
         <div className="modal-backdrop">
-          <div className="modal" style={{ width: "min(480px, 95%)", textAlign: "left" }}>
-            <h2 style={{ fontSize: "1.25rem", color: "var(--forest)", marginBottom: "8px" }}>
-              {modalType === "approvePartial"
-                ? `Setujui Sebagian: ${activeOffer.kode_penawaran}`
-                : `Tolak Penawaran: ${activeOffer.kode_penawaran}`}
-            </h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "16px" }}>
-              Organisasi: <b>{activeOffer.organisasi}</b> · Tawaran Awal: <b>{activeOffer.jumlah_tawaran}</b>
+          <div className="modal" style={{ width: "min(540px, 95%)", textAlign: "left", borderRadius: "16px", padding: "28px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h2 style={{ fontSize: "1.25rem", color: "#013220", margin: 0, fontWeight: 800 }}>
+                {modalType === "approvePartial" ? "Setujui Sebagian Komitmen Mitra" : "Tolak Penawaran Mitra"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setModalType(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+              >
+                <AppIcon name="x" size={18} />
+              </button>
+            </div>
+
+            <p style={{ color: "#64748b", fontSize: "0.88rem", marginBottom: "16px" }}>
+              Proposal: <strong>{activeOffer.kode_penawaran}</strong> ({activeOffer.organisasi}) · Tawaran: <strong>{activeOffer.jumlah_tawaran}</strong>.
             </p>
 
-            {modalType === "approvePartial" && (
+            {modalType === "approvePartial" ? (
               <>
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-                  Jumlah yang Disetujui ({activeOffer.satuan || "Unit"}):
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#013220", marginBottom: "6px" }}>
+                  Volume yang Disetujui ({activeOffer.satuan || "Unit"}):
                 </label>
                 <input
                   type="number"
                   value={partialAmountInput}
                   onChange={(e) => setPartialAmountInput(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.95rem", marginBottom: "14px" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.95rem", marginBottom: "14px" }}
                 />
 
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#013220", marginBottom: "6px" }}>
                   Catatan Alokasi Posko:
                 </label>
                 <textarea
                   rows={3}
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  placeholder="Contoh: Disetujui sebagian sesuai batas alokasi tahap pertama."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.88rem", marginBottom: "18px" }}
+                  placeholder="Contoh: Disetujui sebagian sesuai batas tampung gudang posko hari ini. Sisa kuota tetap terbuka di bursa."
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", marginBottom: "18px" }}
                 />
               </>
-            )}
-
-            {modalType === "reject" && (
+            ) : (
               <>
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-                  Alasan Penolakan (Wajib &amp; Terlihat oleh Mitra):
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#013220", marginBottom: "6px" }}>
+                  Alasan Penolakan Resmi (Wajib &amp; Transparan):
                 </label>
                 <textarea
                   rows={4}
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  placeholder="Contoh: Armada yang diajukan tidak memenuhi persyaratan medan pegunungan yang terisolir."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.88rem", marginBottom: "18px" }}
+                  placeholder="Tuliskan alasan penolakan secara jelas agar mitra memahami keputusan posko..."
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", marginBottom: "18px" }}
                 />
               </>
             )}
 
-            <div className="modal-actions">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
               <button
                 type="button"
-                className="btn btn-secondary"
                 disabled={isSubmitting}
                 onClick={() => setModalType(null)}
+                style={{
+                  background: "#ffffff",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  padding: "9px 18px",
+                  fontSize: "0.88rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
               >
                 Batal
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
                 disabled={isSubmitting || (modalType === "reject" && !notesInput.trim())}
-                onClick={handleExecuteModal}
-                style={{ background: modalType === "reject" ? "#dc2626" : "var(--forest)" }}
+                onClick={handleModalSubmit}
+                style={{
+                  background: modalType === "reject" ? "#991b1b" : "#013220",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "0.88rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
               >
-                {isSubmitting ? "Memproses..." : modalType === "approvePartial" ? "Setujui Alokasi" : "Simpan Penolakan"}
+                {isSubmitting ? "Memproses..." : modalType === "approvePartial" ? "Konfirmasi Persetujuan Sebagian" : "Simpan Penolakan"}
               </button>
             </div>
           </div>

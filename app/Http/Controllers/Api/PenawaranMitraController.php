@@ -8,6 +8,7 @@ use App\Models\BursaBantuan;
 use App\Models\KebutuhanWarga;
 use App\Models\MisiPenyaluran;
 use App\Models\LogAktivitas;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -79,10 +80,11 @@ class PenawaranMitraController extends Controller
 
         $bursa = BursaBantuan::with('kebutuhan')->findOrFail($validated['bursa_id']);
         $user = $request->user();
+        $defaultMitra = User::where('role', 'responder')->first();
 
-        $mitraName = $user ? $user->name : 'Arif Nugroho (Mitra Bantuan BPBD)';
-        $mitraOrg = $user && $user->organization ? $user->organization : ($validated['organisasi'] ?? 'Mitra Bantuan Kemanusiaan');
-        $mitraId = $user ? $user->id : 3;
+        $mitraName = $user ? $user->name : ($defaultMitra?->name ?? 'Arif Nugroho (Mitra Bantuan BPBD)');
+        $mitraOrg = $user && $user->organization ? $user->organization : ($validated['organisasi'] ?? ($defaultMitra?->organization ?? 'Mitra Bantuan Kemanusiaan'));
+        $mitraId = $user ? $user->id : ($defaultMitra?->id ?? null);
 
         // Ekstraksi angka dan unit jika tidak diberikan eksplisit
         $rawAmount = $validated['volume_angka'] ?? intval(preg_replace('/[^0-9]/', '', $validated['jumlah_tawaran']));
@@ -196,11 +198,15 @@ class PenawaranMitraController extends Controller
 
             $approvedVolStr = $validated['approved_volume'] ?: "{$approvedNum} {$satuan}";
 
+            $poskoUserId = $request->user()?->id ?? User::where('role', 'posko')->value('id') ?? User::first()?->id;
+            $approverName = $request->user() ? $request->user()->name : (User::find($poskoUserId)?->name ?? 'Siti Rahma (Koordinator Posko)');
+            $defaultMitraId = User::where('role', 'responder')->value('id') ?? $poskoUserId;
+
             $penawaran->update([
                 'status' => 'Disetujui',
                 'jumlah_disetujui' => $approvedVolStr,
                 'volume_disetujui_angka' => $approvedNum,
-                'approved_by' => $request->user()?->id ?? 2,
+                'approved_by' => $poskoUserId,
                 'reviewed_at' => now(),
             ]);
 
@@ -215,7 +221,7 @@ class PenawaranMitraController extends Controller
             $bursa->update([
                 'status' => $newStatus,
                 'volume_terpenuhi' => "{$totalAllocated} {$satuan}",
-                'claimed_by' => $penawaran->mitra_id,
+                'claimed_by' => $penawaran->mitra_id ?: $defaultMitraId,
                 'claimed_org' => $penawaran->organisasi,
                 'claimed_volume' => $approvedVolStr,
                 'claimed_armada' => $penawaran->armada_info,
@@ -234,7 +240,7 @@ class PenawaranMitraController extends Controller
                 'bursa_id' => $bursa->id,
                 'penawaran_id' => $penawaran->id,
                 'posko_id' => $kebutuhan->posko_id,
-                'responder_id' => $penawaran->mitra_id ?? 3,
+                'responder_id' => $penawaran->mitra_id ?: $defaultMitraId,
                 'responder_name' => $penawaran->mitra_name,
                 'organisasi' => $penawaran->organisasi,
                 'armada_info' => $penawaran->armada_info ?: 'Dukungan Distribusi Posko BPBD',
@@ -243,8 +249,6 @@ class PenawaranMitraController extends Controller
                 'estimasi_waktu' => $penawaran->waktu_kesiapan ?: 'Siap Berangkat',
                 'catatan_lapangan' => $validated['catatan'] ?? 'Alokasi resmi disetujui Koordinator Posko. Penyaluran siap dijalankan.',
             ]);
-
-            $approverName = $request->user() ? $request->user()->name : 'Siti Rahma (Koordinator Posko)';
 
             LogAktivitas::create([
                 'kebutuhan_id' => $kebutuhan->id,
@@ -279,10 +283,12 @@ class PenawaranMitraController extends Controller
             'alasan_penolakan' => 'required|string|max:500',
         ]);
 
+        $poskoUserId = $request->user()?->id ?? User::where('role', 'posko')->value('id') ?? User::first()?->id;
+
         $penawaran->update([
             'status' => 'Ditolak',
             'alasan_penolakan' => $validated['alasan_penolakan'],
-            'approved_by' => $request->user()?->id ?? 2,
+            'approved_by' => $poskoUserId,
             'reviewed_at' => now(),
         ]);
 

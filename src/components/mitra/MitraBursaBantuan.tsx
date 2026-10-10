@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BursaItem, apiService } from "../../services/api";
+import { AppIcon } from "../common/Icons";
 
 interface MitraBursaBantuanProps {
   bursaList: BursaItem[];
@@ -26,9 +27,9 @@ export function MitraBursaBantuan({
   const [offeredAmount, setOfferedAmount] = useState("");
   const [offeredUnit, setOfferedUnit] = useState("Unit");
   const [deliveryMethod, setDeliveryMethod] = useState<'serah_posko' | 'mandiri' | 'koordinasi'>('serah_posko');
-  const [readinessTime, setReadinessTime] = useState("Hari ini, Siap Diserahkan / Dikirim");
+  const [readinessTime, setReadinessTime] = useState("Hari ini, Siap Diserahkan ke Posko");
   const [fleetInfo, setFleetInfo] = useState("");
-  const [notesInput, setNotesInput] = useState("Mitra siap membantu penyediaan logistik kebutuhan pokok sesuai permohonan.");
+  const [notesInput, setNotesInput] = useState("Mitra siap menyerahkan pasokan barang kebutuhan ke Posko BPBD.");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Open items on bursa
@@ -80,7 +81,7 @@ export function MitraBursaBantuan({
       });
 
       if (res.success) {
-        notify?.(`Penawaran bantuan ${modalBursa.item_bantuan} (${amountStr}) berhasil diajukan ke Posko! Status: Diajukan.`);
+        notify?.(`Penawaran bantuan ${modalBursa.item_bantuan} (${amountStr}) berhasil diajukan ke Posko!`);
         setModalBursa(null);
         await onRefresh?.();
         onNavigateToMyOffers();
@@ -96,23 +97,25 @@ export function MitraBursaBantuan({
     <main className="workspace mitra-bursa-workspace">
       <div className="workspace-title">
         <div>
-          <span className="eyebrow">Katalog Terbuka Posko (PRD Bab 6.1 &amp; 6.3 Tahap 1)</span>
+          <span className="eyebrow">KATALOG TERBUKA POSKO BPBD</span>
           <h1>Bursa Bantuan Kemanusiaan</h1>
           <p>
-            Temukan kebutuhan logistik warga yang telah diverifikasi resmi oleh Posko. Ajukan penawaran pemenuhan sesuai kapasitas armada organisasi Anda.
+            Daftar kebutuhan logistik warga terdampak yang telah divalidasi resmi oleh Posko. Silakan ajukan komitmen pemenuhan logistik atau kesiapan armada penyalur.
           </p>
         </div>
         <button
           type="button"
-          className="btn btn-secondary"
+          className="reksa-btn reksa-btn-secondary"
           onClick={onNavigateToMyOffers}
+          style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
         >
-          Lihat Penawaran Saya →
+          <span>Penawaran Saya</span>
+          <AppIcon name="arrow-right" size={15} />
         </button>
       </div>
 
-      {/* FILTER & SEARCH */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+      {/* FILTER & SEARCH BAR */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
         <div className="cases-pill-filters" style={{ margin: 0 }}>
           {["Semua", "Kritis", "Tinggi", "Sedang"].map((u) => (
             <button
@@ -121,104 +124,115 @@ export function MitraBursaBantuan({
               className={`case-filter-btn ${filterUrgency === u ? "active" : ""}`}
               onClick={() => setFilterUrgency(u)}
             >
-              {u === "Semua" ? "Semua Urgensi" : `Prioritas ${u}`}
+              {u === "Semua" ? "Semua Kebutuhan" : `Prioritas ${u}`}
             </button>
           ))}
         </div>
 
-        <div style={{ position: "relative", minWidth: "260px" }}>
+        <div style={{ position: "relative", minWidth: "300px" }}>
+          <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted)", pointerEvents: "none" }}>
+            <AppIcon name="search" size={16} />
+          </div>
           <input
             type="text"
-            placeholder="Cari komoditas atau wilayah..."
+            placeholder="Cari komoditas atau wilayah terdampak..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              borderRadius: "10px",
-              border: "1px solid var(--line)",
-              background: "#fff",
-              fontSize: "0.9rem",
-            }}
+            className="reksa-input-field"
+            style={{ padding: "10px 16px 10px 40px", width: "100%", borderRadius: "10px" }}
           />
         </div>
       </div>
 
       {/* BURSA ITEMS LIST */}
       {filteredItems.length === 0 ? (
-        <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: "18px", padding: "48px 24px", textAlign: "center" }}>
-          <h3 style={{ color: "var(--forest)", margin: "0 0 8px" }}>Tidak Ada Kebutuhan Terbuka di Kategori Ini</h3>
-          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-            Semua kebutuhan di wilayah ini telah terpenuhi atau sedang menunggu verifikasi posko.
+        <div className="reksa-empty-state">
+          <div className="reksa-empty-icon" style={{ background: "#f0f4f1", color: "var(--forest)" }}>
+            <AppIcon name="box" size={32} />
+          </div>
+          <h3 className="reksa-empty-title">Tidak Ada Kebutuhan Terbuka</h3>
+          <p className="reksa-empty-desc">
+            Seluruh kebutuhan logistik di wilayah posko saat ini telah terpenuhi atau masih dalam proses verifikasi tim lapangan.
           </p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "20px" }}>
           {filteredItems.map((item) => {
             const locName = item.posko
               ? `${item.posko.desa || ''}, ${item.posko.kecamatan || ''}, ${item.posko.kabupaten || ''}`
               : item.kebutuhan?.kabupaten || "Posko Wilayah Terdampak";
 
+            const targetNum = parseInt(item.target_volume.replace(/[^0-9]/g, "")) || 0;
+            const filledNum = parseInt((item.volume_terpenuhi || "0").replace(/[^0-9]/g, "")) || 0;
+            const percent = targetNum > 0 ? Math.min(100, Math.round((filledNum / targetNum) * 100)) : 0;
+
             return (
               <div
                 key={item.id}
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid var(--line)",
-                  borderRadius: "18px",
-                  padding: "22px 24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.02)",
-                }}
+                className="reksa-card"
+                style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#ffffff", borderRadius: "16px", border: "1px solid rgba(1, 50, 32, 0.12)", padding: "20px" }}
               >
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                    <span
-                      style={{
-                        fontSize: "0.78rem",
-                        fontWeight: 700,
-                        padding: "3px 10px",
-                        borderRadius: "12px",
-                        background: item.urgensi === "Kritis" ? "rgba(239, 68, 68, 0.15)" : item.urgensi === "Tinggi" ? "rgba(245, 158, 11, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                        color: item.urgensi === "Kritis" ? "#b91c1c" : item.urgensi === "Tinggi" ? "#d97706" : "#475569",
-                      }}
-                    >
-                      Prioritas: {item.urgensi}
+                  {/* Top Badges */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", gap: "8px" }}>
+                    <span className={`reksa-badge ${item.urgensi === "Kritis" ? "critical" : item.urgensi === "Tinggi" ? "warning" : "neutral"}`}>
+                      Prioritas {item.urgensi}
                     </span>
-                    <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
-                      {item.posko?.nama_posko || "Posko Wilayah"}
+                    <span style={{ fontSize: "0.8rem", color: "var(--muted)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      <AppIcon name="pin" size={13} />
+                      <span>{item.posko?.nama_posko || "Posko Wilayah"}</span>
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: "1.2rem", color: "var(--ink)", margin: "0 0 6px", fontWeight: 700 }}>
+                  {/* Commodity Title */}
+                  <h3 style={{ margin: "0 0 10px", fontSize: "1.2rem", fontWeight: 700, color: "var(--forest)", lineHeight: 1.35 }}>
                     {item.item_bantuan}
                   </h3>
 
-                  <div style={{ fontSize: "0.86rem", color: "var(--muted)", marginBottom: "12px" }}>
-                    📍 Wilayah: <b>{locName}</b>
+                  {/* Location Meta */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "16px" }}>
+                    <AppIcon name="map" size={14} />
+                    <span>Lokasi Distribusi: <strong style={{ color: "var(--ink)" }}>{locName}</strong></span>
                   </div>
 
-                  <div style={{ background: "#f8fafc", padding: "12px", borderRadius: "10px", marginBottom: "16px", fontSize: "0.86rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span>Target Kebutuhan:</span>
-                      <strong style={{ color: "var(--ink)" }}>{item.target_volume}</strong>
+                  {/* Progress & Target Meter */}
+                  <div style={{ background: "#fbfbf8", padding: "12px 14px", borderRadius: "12px", border: "1px solid rgba(1, 50, 32, 0.08)", marginBottom: "18px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        Kebutuhan Posko
+                      </span>
+                      <strong style={{ fontSize: "1.05rem", color: "var(--forest)", fontWeight: 800 }}>
+                        {item.target_volume}
+                      </strong>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span>Alokasi Saat Ini:</span>
-                      <strong style={{ color: "#1d4ed8" }}>{item.volume_terpenuhi || "0"}</strong>
+
+                    <div style={{ height: "7px", background: "#e5e7eb", borderRadius: "999px", overflow: "hidden", marginBottom: "6px" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${percent}%`,
+                          background: percent >= 100 ? "#15803d" : percent > 0 ? "#0284c7" : "#80866e",
+                          borderRadius: "999px",
+                          transition: "width 0.3s ease",
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.76rem", color: "var(--muted)" }}>
+                      <span>Teralokasi: <strong>{item.volume_terpenuhi || "0"}</strong></span>
+                      <span>{percent}% Terpenuhi</span>
                     </div>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  style={{ width: "100%", background: "var(--forest)" }}
+                  className="reksa-btn reksa-btn-primary"
+                  style={{ width: "100%", justifyContent: "center", padding: "11px 16px", borderRadius: "10px", display: "inline-flex", alignItems: "center", gap: "8px" }}
                   onClick={() => openOfferModal(item)}
                 >
-                  Ajukan Penawaran Bantuan →
+                  <AppIcon name="handshake" size={16} />
+                  <span>Ajukan Komitmen Bantuan</span>
                 </button>
               </div>
             );
@@ -226,125 +240,157 @@ export function MitraBursaBantuan({
         </div>
       )}
 
-      {/* OFFER SUBMISSION MODAL (Bab 6.3 Tahap 2) */}
+      {/* OFFER SUBMISSION MODAL */}
       {modalBursa && (
         <div className="modal-backdrop">
-          <div className="modal" style={{ width: "min(500px, 95%)", textAlign: "left" }}>
-            <h2 style={{ fontSize: "1.3rem", color: "var(--forest)", marginBottom: "6px" }}>
-              Ajukan Penawaran: {modalBursa.item_bantuan}
-            </h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "16px" }}>
-              Target Kebutuhan Posko: <b>{modalBursa.target_volume}</b>. Anda dapat menawarkan pemenuhan sesuai kapasitas logistik organisasi Anda. Mitra tidak wajib memiliki kendaraan pengangkut.
-            </p>
-
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px", marginBottom: "12px" }}>
+          <div className="modal" style={{ width: "min(520px, 95%)", textAlign: "left", borderRadius: "18px", padding: "26px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "4px" }}>
-                  Volume Bantuan Ditawarkan:
+                <span className="eyebrow" style={{ color: "var(--forest)" }}>FORMULIR KOMITMEN MITRA</span>
+                <h2 style={{ fontSize: "1.3rem", color: "var(--forest)", margin: "4px 0 0", fontWeight: 800 }}>
+                  {modalBursa.item_bantuan}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalBursa(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: "4px" }}
+              >
+                <AppIcon name="x" size={18} />
+              </button>
+            </div>
+
+            <div style={{ background: "#fbfbf8", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(1, 50, 32, 0.08)", marginBottom: "18px", fontSize: "0.86rem", color: "var(--ink)" }}>
+              Target Kebutuhan Posko: <strong style={{ color: "var(--forest)" }}>{modalBursa.target_volume}</strong>. Silakan masukkan kapasitas logistik yang dapat dipenuhi organisasi Anda.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "14px" }}>
+              <div>
+                <label className="reksa-form-label">
+                  Volume yang Ditawarkan:
                 </label>
                 <input
                   type="number"
                   value={offeredAmount}
                   onChange={(e) => setOfferedAmount(e.target.value)}
                   placeholder="Contoh: 300"
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.95rem" }}
+                  className="reksa-input-field"
+                  style={{ borderRadius: "8px" }}
                 />
               </div>
+
               <div>
-                <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "4px" }}>
+                <label className="reksa-form-label">
                   Satuan:
                 </label>
                 <input
                   type="text"
                   value={offeredUnit}
                   onChange={(e) => setOfferedUnit(e.target.value)}
-                  placeholder="L / Paket"
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.95rem" }}
+                  className="reksa-input-field"
+                  style={{ borderRadius: "8px" }}
                 />
               </div>
             </div>
 
-            {/* PILIHAN METODE PENYALURAN */}
-            <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-              Metode Penyaluran / Distribusi Bantuan:
-            </label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px" }}>
-              {[
-                { id: "serah_posko", label: "🏢 Diserahkan ke Gudang / Posko BPBD (Tanpa Armada Mandiri)", desc: "Mitra menyediakan pasokan barang; pengangkutan ke warga dikoordinasikan oleh posko." },
-                { id: "mandiri", label: "🚚 Distribusi Mandiri (Memiliki Armada Sendiri)", desc: "Mitra menyalurkan barang langsung menggunakan kendaraan operasional milik mitra." },
-                { id: "koordinasi", label: "🤝 Koordinasi Penyaluran Bersama Tim Posko", desc: "Penyaluran digabungkan bersama konvoi logistik dan personel relawan Posko BPBD." },
-              ].map((m) => (
-                <label
-                  key={m.id}
+            <div style={{ marginBottom: "14px" }}>
+              <label className="reksa-form-label">
+                Metode Penyaluran Bantuan:
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod('serah_posko')}
                   style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "10px",
-                    padding: "10px 12px",
-                    borderRadius: "8px",
-                    border: deliveryMethod === m.id ? "1.5px solid var(--forest)" : "1px solid var(--line)",
-                    background: deliveryMethod === m.id ? "rgba(1, 50, 32, 0.04)" : "#fff",
+                    padding: "11px 12px",
+                    borderRadius: "10px",
+                    border: deliveryMethod === 'serah_posko' ? "2px solid var(--forest)" : "1px solid rgba(1, 50, 32, 0.15)",
+                    background: deliveryMethod === 'serah_posko' ? "#eef6f0" : "#ffffff",
+                    fontSize: "0.85rem",
+                    fontWeight: deliveryMethod === 'serah_posko' ? 700 : 500,
+                    color: deliveryMethod === 'serah_posko' ? "var(--forest)" : "var(--ink)",
                     cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "7px",
                   }}
                 >
-                  <input
-                    type="radio"
-                    name="deliveryMethod"
-                    value={m.id}
-                    checked={deliveryMethod === m.id}
-                    onChange={() => setDeliveryMethod(m.id as any)}
-                    style={{ marginTop: "3px", accentColor: "var(--forest)" }}
-                  />
-                  <div>
-                    <strong style={{ fontSize: "0.88rem", color: "var(--ink)", display: "block" }}>{m.label}</strong>
-                    <small style={{ color: "var(--muted)", fontSize: "0.78rem" }}>{m.desc}</small>
-                  </div>
-                </label>
-              ))}
+                  <AppIcon name="box" size={15} />
+                  <span>Serah ke Gudang Posko</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod('mandiri')}
+                  style={{
+                    padding: "11px 12px",
+                    borderRadius: "10px",
+                    border: deliveryMethod === 'mandiri' ? "2px solid var(--forest)" : "1px solid rgba(1, 50, 32, 0.15)",
+                    background: deliveryMethod === 'mandiri' ? "#eef6f0" : "#ffffff",
+                    fontSize: "0.85rem",
+                    fontWeight: deliveryMethod === 'mandiri' ? 700 : 500,
+                    color: deliveryMethod === 'mandiri' ? "var(--forest)" : "var(--ink)",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "7px",
+                  }}
+                >
+                  <AppIcon name="truck" size={15} />
+                  <span>Penyaluran Mandiri</span>
+                </button>
+              </div>
             </div>
 
-            {/* INPUT ARMADA HANYA JIKA MANDIRI (OPSIONAL) */}
-            {deliveryMethod === "mandiri" && (
-              <div style={{ marginBottom: "12px", background: "#f8fafc", padding: "10px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                <label style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, color: "var(--ink)", marginBottom: "4px" }}>
-                  Informasi Armada &amp; Kapasitas (Opsional):
+            {deliveryMethod === 'mandiri' && (
+              <div style={{ marginBottom: "14px" }}>
+                <label className="reksa-form-label">
+                  Informasi Armada &amp; Pengemudi Mitra:
                 </label>
                 <input
                   type="text"
+                  placeholder="Contoh: Truk Box B 1234 CD · Kapasitas 2 Ton"
                   value={fleetInfo}
                   onChange={(e) => setFleetInfo(e.target.value)}
-                  placeholder="Contoh: Mobil Box Logistik No. 01 · Kapasitas 200 Paket / Truk Tangki 500L"
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid var(--line)", fontSize: "0.88rem" }}
+                  className="reksa-input-field"
+                  style={{ borderRadius: "8px" }}
                 />
               </div>
             )}
 
-            <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "4px" }}>
-              Perkiraan Waktu Kesiapan Penyerahan / Distribusi:
-            </label>
-            <input
-              type="text"
-              value={readinessTime}
-              onChange={(e) => setReadinessTime(e.target.value)}
-              placeholder="Contoh: Hari ini, Siap Diserahkan ke Posko dalam 2 Jam"
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "12px" }}
-            />
+            <div style={{ marginBottom: "14px" }}>
+              <label className="reksa-form-label">
+                Waktu Kesiapan Logistik:
+              </label>
+              <input
+                type="text"
+                value={readinessTime}
+                onChange={(e) => setReadinessTime(e.target.value)}
+                className="reksa-input-field"
+                style={{ borderRadius: "8px" }}
+              />
+            </div>
 
-            <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "4px" }}>
-              Catatan Dukungan Mitra:
-            </label>
-            <textarea
-              rows={2}
-              value={notesInput}
-              onChange={(e) => setNotesInput(e.target.value)}
-              placeholder="Catatan tambahan mengenai spesifikasi barang atau kesepakatan koordinasi posko..."
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.88rem", marginBottom: "18px" }}
-            />
+            <div style={{ marginBottom: "20px" }}>
+              <label className="reksa-form-label">
+                Catatan Operasional Mitra:
+              </label>
+              <textarea
+                rows={3}
+                value={notesInput}
+                onChange={(e) => setNotesInput(e.target.value)}
+                className="reksa-textarea-field"
+                style={{ borderRadius: "8px" }}
+              />
+            </div>
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="reksa-btn reksa-btn-secondary"
                 disabled={isSubmitting}
                 onClick={() => setModalBursa(null)}
               >
@@ -352,12 +398,13 @@ export function MitraBursaBantuan({
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="reksa-btn reksa-btn-primary"
                 disabled={isSubmitting || !offeredAmount}
                 onClick={handleSubmitOffer}
-                style={{ background: "var(--forest)" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}
               >
-                {isSubmitting ? "Mengirimkan..." : "Kirim Penawaran ke Posko"}
+                <AppIcon name="check" size={15} />
+                <span>{isSubmitting ? "Mengirim..." : "Kirim Penawaran ke Posko"}</span>
               </button>
             </div>
           </div>

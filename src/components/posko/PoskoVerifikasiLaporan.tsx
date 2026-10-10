@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CaseRecord } from "../../App";
 import { apiService } from "../../services/api";
+import { AppIcon } from "../common/Icons";
 
 interface PoskoVerifikasiLaporanProps {
   cases: CaseRecord[];
@@ -111,62 +112,83 @@ export function PoskoVerifikasiLaporan({
     }
   };
 
+  const pendingCount = cases.filter((c) => (c.status || "").toLowerCase().includes("verifikasi") || c.status === "Diajukan" || c.status === "Baru").length;
+  const clarifyCount = cases.filter((c) => (c.status || "").toLowerCase().includes("klarifikasi")).length;
+  const verifiedCount = cases.filter((c) => (c.status || "").toLowerCase().includes("terbuka") || (c.status || "").toLowerCase().includes("sebagian") || (c.status || "").toLowerCase().includes("teralokasi") || (c.status || "").toLowerCase().includes("selesai")).length;
+  const rejectedCount = cases.filter((c) => (c.status || "").toLowerCase().includes("tolak")).length;
+
   return (
-    <main className="workspace posko-verifikasi-workspace">
-      <div className="workspace-title">
+    <main className="workspace posko-verifikasi-workspace" style={{ maxWidth: "1280px", margin: "0 auto", padding: "28px 24px" }}>
+      {/* Title bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "24px" }}>
         <div>
-          <span className="eyebrow">Modul Koordinator Posko Wilayah</span>
-          <h1>Verifikasi &amp; Validasi Laporan Warga</h1>
-          <p>
-            Periksa keabsahan laporan warga terdampak, tetapkan prioritas akhir, minta klarifikasi, atau rilis kebutuhan ke Bursa Bantuan.
+          <span className="eyebrow" style={{ color: "#80866e", fontWeight: 700, letterSpacing: "0.05em", fontSize: "0.78rem" }}>
+            MODUL KOORDINATOR POSKO WILAYAH
+          </span>
+          <h1 style={{ margin: "4px 0 6px", color: "#013220", fontSize: "1.75rem", fontWeight: 800 }}>
+            Verifikasi &amp; Validasi Laporan Warga
+          </h1>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "0.92rem", maxWidth: "680px", lineHeight: 1.5 }}>
+            Periksa keabsahan permohonan warga, tetapkan prioritas kedaruratan, minta klarifikasi foto atau data fisik, dan rilis kuota sah ke Bursa Kemitraan.
           </p>
         </div>
-        <div className="posko-status-live-badge">
-          <span className="live-indicator-dot" /> Antrean Posko ({cases.length} Total Laporan)
+        <div style={{ background: "#ffffff", border: "1px solid rgba(1, 50, 32, 0.12)", padding: "8px 14px", borderRadius: "10px", fontSize: "0.84rem", fontWeight: 700, color: "#013220", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#15803d" }} />
+          <span>Antrean Posko ({cases.length} Total Laporan)</span>
         </div>
       </div>
 
-      {/* FILTER TABS & SEARCH */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "space-between", alignItems: "center", margin: "0 0 24px" }}>
-        <div className="cases-pill-filters" style={{ margin: 0 }}>
-          <button
-            type="button"
-            className={`case-filter-btn ${tab === "pending" ? "active" : ""}`}
-            onClick={() => setTab("pending")}
-          >
-            Menunggu Verifikasi ({cases.filter((c) => (c.status || "").toLowerCase().includes("verifikasi") || c.status === "Diajukan").length})
-          </button>
-          <button
-            type="button"
-            className={`case-filter-btn ${tab === "clarify" ? "active" : ""}`}
-            onClick={() => setTab("clarify")}
-          >
-            Perlu Klarifikasi ({cases.filter((c) => (c.status || "").toLowerCase().includes("klarifikasi")).length})
-          </button>
-          <button
-            type="button"
-            className={`case-filter-btn ${tab === "verified" ? "active" : ""}`}
-            onClick={() => setTab("verified")}
-          >
-            Terverifikasi / Terbuka ({cases.filter((c) => (c.status || "").toLowerCase().includes("terbuka") || (c.status || "").toLowerCase().includes("sebagian")).length})
-          </button>
-          <button
-            type="button"
-            className={`case-filter-btn ${tab === "rejected" ? "active" : ""}`}
-            onClick={() => setTab("rejected")}
-          >
-            Ditolak ({cases.filter((c) => (c.status || "").toLowerCase().includes("tolak")).length})
-          </button>
-          <button
-            type="button"
-            className={`case-filter-btn ${tab === "all" ? "active" : ""}`}
-            onClick={() => setTab("all")}
-          >
-            Semua ({cases.length})
-          </button>
+      {/* FILTER TABS & SEARCH BAR */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "14px",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "24px",
+          background: "#ffffff",
+          padding: "12px 18px",
+          borderRadius: "14px",
+          border: "1px solid rgba(1, 50, 32, 0.08)",
+        }}
+      >
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+          {[
+            { id: "pending", label: "Menunggu Verifikasi", count: pendingCount },
+            { id: "clarify", label: "Perlu Klarifikasi", count: clarifyCount },
+            { id: "verified", label: "Terverifikasi / Terbuka", count: verifiedCount },
+            { id: "rejected", label: "Ditolak", count: rejectedCount },
+            { id: "all", label: "Semua", count: cases.length },
+          ].map((tabItem) => {
+            const isActive = tab === tabItem.id;
+            return (
+              <button
+                key={tabItem.id}
+                type="button"
+                onClick={() => setTab(tabItem.id as any)}
+                style={{
+                  padding: "7px 14px",
+                  borderRadius: "20px",
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  border: isActive ? "1px solid #013220" : "1px solid #e2e8f0",
+                  background: isActive ? "#013220" : "#ffffff",
+                  color: isActive ? "#ffffff" : "#475569",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {tabItem.label} ({tabItem.count})
+              </button>
+            );
+          })}
         </div>
 
         <div style={{ position: "relative", minWidth: "260px" }}>
+          <div style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>
+            <AppIcon name="search" size={15} />
+          </div>
           <input
             type="text"
             placeholder="Cari kode kasus, warga, komoditas..."
@@ -174,128 +196,242 @@ export function PoskoVerifikasiLaporan({
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: "100%",
-              padding: "10px 16px",
-              borderRadius: "10px",
-              border: "1px solid var(--line)",
-              background: "#fff",
-              fontSize: "0.9rem",
+              padding: "7px 12px 7px 32px",
+              borderRadius: "8px",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.84rem",
+              color: "#1e293b",
             }}
           />
         </div>
       </div>
 
-      {/* LIST OF CASES */}
+      {/* CASES QUEUE LIST */}
       {filterCases.length === 0 ? (
-        <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: "18px", padding: "48px 24px", textAlign: "center", margin: "20px 0" }}>
-          <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(1, 50, 32, 0.08)", color: "var(--forest)", display: "grid", placeItems: "center", margin: "0 auto 16px", fontSize: "20px" }}>
-            ✓
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            border: "1px dashed #cbd5e1",
+            padding: "48px 24px",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(1,50,32,0.06)", color: "#013220", display: "grid", placeItems: "center", margin: "0 auto 12px" }}>
+            <AppIcon name="file" size={24} />
           </div>
-          <h3 style={{ margin: "0 0 8px", color: "var(--forest)" }}>Tidak Ada Laporan di Antrean Ini</h3>
-          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-            Semua laporan telah diproses atau belum ada data yang sesuai filter pilihan Anda.
+          <h3 style={{ margin: "0 0 6px", color: "#013220", fontSize: "1.1rem", fontWeight: 700 }}>
+            Tidak Ada Laporan di Antrean Ini
+          </h3>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "0.88rem" }}>
+            Semua laporan telah diproses atau belum ada data yang sesuai dengan filter pencarian Anda.
           </p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {filterCases.map((c) => {
-            const isPending = (c.status || "").toLowerCase().includes("verifikasi") || c.status === "Diajukan";
+            const isPending = (c.status || "").toLowerCase().includes("verifikasi") || c.status === "Diajukan" || c.status === "Baru";
             const isClarify = (c.status || "").toLowerCase().includes("klarifikasi");
             const isRejected = (c.status || "").toLowerCase().includes("tolak");
-            const isVerified = (c.status || "").toLowerCase().includes("terbuka") || (c.status || "").toLowerCase().includes("sebagian");
+            const isVerified = (c.status || "").toLowerCase().includes("terbuka") || (c.status || "").toLowerCase().includes("sebagian") || (c.status || "").toLowerCase().includes("teralokasi") || (c.status || "").toLowerCase().includes("selesai");
 
             return (
               <div
                 key={c.id}
                 style={{
                   background: "#ffffff",
-                  border: isPending ? "1.5px solid rgba(217, 119, 6, 0.4)" : "1px solid var(--line)",
-                  borderRadius: "18px",
+                  borderRadius: "16px",
+                  border: isRejected
+                    ? "1px solid #fecaca"
+                    : isClarify
+                    ? "1px solid #fde68a"
+                    : isVerified
+                    ? "1px solid #bbf7d0"
+                    : "1px solid rgba(1, 50, 32, 0.12)",
+                  boxShadow: "0 2px 8px rgba(1, 50, 32, 0.03)",
                   padding: "20px 24px",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.02)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
                 }}
               >
                 {/* Header row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                      <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--forest)", fontFamily: "monospace" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "6px" }}>
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontWeight: 800,
+                          fontSize: "0.95rem",
+                          color: "#013220",
+                          background: "#f1f5f2",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                        }}
+                      >
                         {c.id}
                       </span>
                       <span
                         style={{
-                          fontSize: "0.78rem",
+                          fontSize: "0.75rem",
                           fontWeight: 700,
                           padding: "3px 10px",
                           borderRadius: "12px",
-                          background: c.urgency === "Kritis" ? "rgba(239, 68, 68, 0.15)" : c.urgency === "Tinggi" ? "rgba(245, 158, 11, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                          color: c.urgency === "Kritis" ? "#b91c1c" : c.urgency === "Tinggi" ? "#d97706" : "#475569",
+                          background:
+                            c.urgency === "Kritis"
+                              ? "#fef2f2"
+                              : c.urgency === "Tinggi"
+                              ? "#fffbeb"
+                              : "#f8fafc",
+                          color:
+                            c.urgency === "Kritis"
+                              ? "#991b1b"
+                              : c.urgency === "Tinggi"
+                              ? "#b45309"
+                              : "#475569",
+                          border: `1px solid ${
+                            c.urgency === "Kritis"
+                              ? "#fecaca"
+                              : c.urgency === "Tinggi"
+                              ? "#fde68a"
+                              : "#e2e8f0"
+                          }`,
                         }}
                       >
-                        Prioritas: {c.urgency}
+                        Prioritas {c.urgency}
                       </span>
                       <span
                         style={{
-                          fontSize: "0.78rem",
-                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
                           padding: "3px 10px",
                           borderRadius: "12px",
-                          background: isVerified ? "rgba(16, 185, 129, 0.15)" : isRejected ? "rgba(239, 68, 68, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                          color: isVerified ? "#047857" : isRejected ? "#b91c1c" : "#b45309",
+                          background: isVerified
+                            ? "#f0fdf4"
+                            : isRejected
+                            ? "#fef2f2"
+                            : isClarify
+                            ? "#fffbeb"
+                            : "#eff6ff",
+                          color: isVerified
+                            ? "#15803d"
+                            : isRejected
+                            ? "#991b1b"
+                            : isClarify
+                            ? "#b45309"
+                            : "#1d4ed8",
                         }}
                       >
-                        Status: {c.status}
+                        {c.status}
                       </span>
                     </div>
-                    <h3 style={{ margin: "2px 0 6px", fontSize: "1.15rem", color: "var(--ink)", fontWeight: 700 }}>
+
+                    <h3 style={{ margin: "0 0 6px", fontSize: "1.2rem", fontWeight: 800, color: "#013220" }}>
                       Kebutuhan {c.item} · {c.qty}
                     </h3>
-                    <div style={{ fontSize: "0.86rem", color: "var(--muted)", display: "flex", flexWrap: "wrap", gap: "14px" }}>
-                      <span>📍 {c.location || "Wilayah Posko"}</span>
-                      <span>👨‍👩‍👧‍👦 {c.kk}</span>
-                      <span>👤 Pelapor: <b>{c.applicantName || "Warga Terdampak"}</b> {c.applicantPhone ? `(${c.applicantPhone})` : ""}</span>
-                      <span>📅 {c.date || "Baru saja"}</span>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", fontSize: "0.82rem", color: "#64748b" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="pin" size={13} style={{ color: "#80866e" }} />
+                        <span>{c.location || "Wilayah Posko"}</span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="users" size={13} style={{ color: "#80866e" }} />
+                        <span>{c.kk}</span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="user" size={13} style={{ color: "#80866e" }} />
+                        <span>Pelapor: <strong>{c.applicantName || "Warga Terdampak"}</strong> {c.applicantPhone ? `(${c.applicantPhone})` : ""}</span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                        <AppIcon name="calendar" size={13} style={{ color: "#80866e" }} />
+                        <span>{c.date || "Baru saja"}</span>
+                      </span>
                     </div>
                   </div>
 
-                  {/* Actions for this item */}
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {/* Action button cluster */}
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                     <button
                       type="button"
-                      className="btn btn-secondary"
-                      style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem" }}
                       onClick={() => onSelectCase(c)}
+                      style={{
+                        background: "#ffffff",
+                        color: "#013220",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "8px",
+                        padding: "8px 14px",
+                        fontSize: "0.84rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
                     >
-                      Lihat Rincian
+                      <AppIcon name="file" size={14} />
+                      <span>Buka Kasus</span>
                     </button>
 
                     {isPending && (
                       <>
                         <button
                           type="button"
-                          className="btn btn-primary"
-                          style={{ padding: "8px 16px", minHeight: "38px", fontSize: "0.85rem", background: "#047857" }}
                           onClick={() => openActionModal(c, "verify")}
+                          style={{
+                            background: "#013220",
+                            color: "#ffffff",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "8px 16px",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
                         >
-                          ✓ Verifikasi &amp; Rilis
+                          <AppIcon name="check" size={14} />
+                          <span>Verifikasi &amp; Rilis</span>
                         </button>
                         <button
                           type="button"
-                          className="btn btn-secondary"
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem", borderColor: "#d97706", color: "#b45309" }}
                           onClick={() => openActionModal(c, "clarify")}
+                          style={{
+                            background: "#fffbeb",
+                            color: "#92400e",
+                            border: "1px solid #fde68a",
+                            borderRadius: "8px",
+                            padding: "8px 14px",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
                         >
-                          Minta Klarifikasi
+                          <AppIcon name="alert" size={14} />
+                          <span>Minta Klarifikasi</span>
                         </button>
                         <button
                           type="button"
-                          className="btn btn-secondary"
-                          style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem", borderColor: "#ef4444", color: "#dc2626" }}
                           onClick={() => openActionModal(c, "reject")}
+                          style={{
+                            background: "#fef2f2",
+                            color: "#991b1b",
+                            border: "1px solid #fecaca",
+                            borderRadius: "8px",
+                            padding: "8px 12px",
+                            fontSize: "0.84rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
                         >
-                          Tolak
+                          <AppIcon name="x" size={14} />
+                          <span>Tolak</span>
                         </button>
                       </>
                     )}
@@ -303,76 +439,118 @@ export function PoskoVerifikasiLaporan({
                     {isClarify && (
                       <button
                         type="button"
-                        className="btn btn-primary"
-                        style={{ padding: "8px 16px", minHeight: "38px", fontSize: "0.85rem", background: "#047857" }}
                         onClick={() => openActionModal(c, "verify")}
+                        style={{
+                          background: "#013220",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "8px 16px",
+                          fontSize: "0.84rem",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
                       >
-                        ✓ Selesai Klarifikasi &amp; Rilis
+                        <AppIcon name="check" size={14} />
+                        <span>Selesai Klarifikasi &amp; Rilis</span>
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Priority recommendation box per Bab 5.2 Tahap 3 */}
+                {/* Priority recommendation box */}
                 {c.priorityRationale && (
                   <div
                     style={{
-                      background: "rgba(1, 50, 32, 0.04)",
-                      borderLeft: "4px solid var(--forest)",
-                      borderRadius: "0 10px 10px 0",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "8px",
+                      background: "#f0fdf4",
+                      border: "1px solid #bbf7d0",
+                      borderRadius: "10px",
                       padding: "10px 14px",
-                      fontSize: "0.85rem",
-                      color: "var(--ink)",
+                      marginBottom: "10px",
+                      fontSize: "0.84rem",
+                      color: "#166534",
+                      lineHeight: 1.45,
                     }}
                   >
-                    <strong>💡 Rekomendasi Sistem Bantuan Keputusan:</strong> {c.priorityRationale}
+                    <div style={{ marginTop: "2px" }}><AppIcon name="shield" size={14} /></div>
+                    <div>
+                      <strong>Rekomendasi Sistem Validasi:</strong> {c.priorityRationale}
+                    </div>
                   </div>
                 )}
 
                 {/* Description or notes */}
                 {c.notes && (
-                  <div style={{ fontSize: "0.88rem", color: "#334155", lineHeight: 1.5, background: "#f8fafc", padding: "10px 14px", borderRadius: "8px" }}>
-                    <b>Catatan Pelapor:</b> {c.notes}
+                  <div
+                    style={{
+                      background: "#fbfbf8",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(1, 50, 32, 0.08)",
+                      padding: "10px 14px",
+                      marginBottom: "10px",
+                      fontSize: "0.84rem",
+                      color: "#334155",
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    <strong style={{ color: "#013220" }}>Catatan Pelapor:</strong> {c.notes}
                   </div>
                 )}
 
                 {/* Clarification info & Citizen Answer Display */}
                 {c.pertanyaanKlarifikasi && (
-                  <div style={{ fontSize: "0.86rem", color: "#92400e", background: "#fef3c7", border: "1px solid #fde68a", padding: "12px 14px", borderRadius: "10px" }}>
+                  <div
+                    style={{
+                      background: "#fffbeb",
+                      border: "1px solid #fde68a",
+                      borderRadius: "10px",
+                      padding: "12px 16px",
+                      marginBottom: "10px",
+                      fontSize: "0.84rem",
+                    }}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#b45309" }}>
-                        📌 Klarifikasi Posko: {c.kategoriKlarifikasi || "Kelengkapan Informasi"}
+                      <span style={{ fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#b45309" }}>
+                        Klarifikasi Posko: {c.kategoriKlarifikasi || "Kelengkapan Informasi"}
                       </span>
                       {c.memintaLampiran && (
-                        <span style={{ fontSize: "0.75rem", background: "#d97706", color: "#fff", padding: "2px 8px", borderRadius: "8px", fontWeight: 600 }}>
-                          Wajib Lampiran Baru
+                        <span style={{ fontSize: "0.72rem", background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", padding: "2px 8px", borderRadius: "8px", fontWeight: 600 }}>
+                          Wajib Lampiran Tambahan
                         </span>
                       )}
                     </div>
-                    <div style={{ marginBottom: c.jawabanKlarifikasi ? "8px" : 0 }}>
-                      <b>Pertanyaan Posko:</b> "{c.pertanyaanKlarifikasi}"
+                    <div style={{ color: "#78350f", marginBottom: c.jawabanKlarifikasi ? "8px" : 0 }}>
+                      <strong>Pertanyaan Posko:</strong> "{c.pertanyaanKlarifikasi}"
                     </div>
 
                     {c.jawabanKlarifikasi ? (
-                      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px dashed #f59e0b", background: "#fffbeb", padding: "8px 10px", borderRadius: "6px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#15803d", fontWeight: 700, fontSize: "0.82rem", marginBottom: "3px" }}>
-                          ✓ Jawaban Pelapor Diterima (Perlu Peninjauan Ulang):
+                      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px dashed #fde68a", background: "#ffffff", padding: "10px 12px", borderRadius: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#15803d", fontWeight: 700, fontSize: "0.82rem", marginBottom: "4px" }}>
+                          <AppIcon name="check" size={13} />
+                          <span>Jawaban Warga Diterima (Siap Divalidasi Ulang):</span>
                         </div>
-                        <div style={{ color: "#1e293b", fontWeight: 500 }}>
+                        <div style={{ color: "#013220", fontWeight: 500 }}>
                           "{c.jawabanKlarifikasi}"
                         </div>
                         {c.fotoKlarifikasi && (
                           <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ fontSize: "0.78rem", color: "#047857", fontWeight: 600 }}>📷 Lampiran Baru:</span>
-                            <a href={c.fotoKlarifikasi} target="_blank" rel="noreferrer" style={{ fontSize: "0.78rem", color: "#0284c7", textDecoration: "underline", fontWeight: 600 }}>
+                            <span style={{ fontSize: "0.8rem", color: "#15803d", fontWeight: 600 }}>Lampiran Dokumen Baru:</span>
+                            <a href={c.fotoKlarifikasi} target="_blank" rel="noreferrer" style={{ fontSize: "0.8rem", color: "#0f766e", textDecoration: "underline", fontWeight: 600 }}>
                               Lihat Foto/Dokumen Klarifikasi
                             </a>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div style={{ marginTop: "4px", fontSize: "0.8rem", color: "#b45309", fontStyle: "italic" }}>
-                        ⏳ Menunggu tanggapan &amp; kelengkapan data dari pelapor.
+                      <div style={{ marginTop: "6px", fontSize: "0.82rem", color: "#b45309", fontStyle: "italic", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <AppIcon name="clock" size={13} />
+                        <span>Menunggu tanggapan &amp; kelengkapan data dari pelapor.</span>
                       </div>
                     )}
                   </div>
@@ -380,11 +558,20 @@ export function PoskoVerifikasiLaporan({
 
                 {/* Rejection notice if rejected */}
                 {isRejected && c.alasanPenolakan && (
-                  <div style={{ fontSize: "0.86rem", color: "#991b1b", background: "#fee2e2", border: "1px solid #fecaca", padding: "12px 14px", borderRadius: "10px" }}>
-                    <div style={{ fontWeight: 700, marginBottom: "4px" }}>❌ Alasan Penolakan: {c.alasanPenolakan}</div>
+                  <div
+                    style={{
+                      background: "#fef2f2",
+                      border: "1px solid #fecaca",
+                      borderRadius: "10px",
+                      padding: "10px 14px",
+                      fontSize: "0.84rem",
+                      color: "#991b1b",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, marginBottom: "4px" }}>Alasan Penolakan: {c.alasanPenolakan}</div>
                     {c.tindakLanjutPenolakan && (
                       <div style={{ fontSize: "0.82rem", color: "#7f1d1d", marginTop: "4px" }}>
-                        <b>Saran Tindak Lanjut:</b> {c.tindakLanjutPenolakan}
+                        <strong>Saran Tindak Lanjut:</strong> {c.tindakLanjutPenolakan}
                       </div>
                     )}
                   </div>
@@ -398,20 +585,30 @@ export function PoskoVerifikasiLaporan({
       {/* ACTION MODAL */}
       {modalAction && selectedCase && (
         <div className="modal-backdrop">
-          <div className="modal" style={{ width: "min(560px, 95%)", textAlign: "left" }}>
-            <h2 style={{ fontSize: "1.3rem", color: "var(--forest)", marginBottom: "8px" }}>
-              {modalAction === "verify" && `Verifikasi Laporan ${selectedCase.id}`}
-              {modalAction === "clarify" && `Minta Klarifikasi untuk ${selectedCase.id}`}
-              {modalAction === "reject" && `Tolak Laporan ${selectedCase.id}`}
-              {modalAction === "further" && `Pemeriksaan Lanjutan ${selectedCase.id}`}
-            </h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem", marginBottom: "18px" }}>
-              Komoditas: <b>{selectedCase.item} ({selectedCase.qty})</b> untuk {selectedCase.kk} di {selectedCase.location}.
+          <div className="modal" style={{ width: "min(560px, 95%)", textAlign: "left", borderRadius: "16px", padding: "28px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h2 style={{ fontSize: "1.25rem", color: "#013220", margin: 0, fontWeight: 800 }}>
+                {modalAction === "verify" && `Verifikasi Laporan ${selectedCase.id}`}
+                {modalAction === "clarify" && `Minta Klarifikasi untuk ${selectedCase.id}`}
+                {modalAction === "reject" && `Tolak Laporan ${selectedCase.id}`}
+                {modalAction === "further" && `Pemeriksaan Lanjutan ${selectedCase.id}`}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setModalAction(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "4px" }}
+              >
+                <AppIcon name="x" size={18} />
+              </button>
+            </div>
+
+            <p style={{ color: "#64748b", fontSize: "0.88rem", marginBottom: "18px" }}>
+              Komoditas: <strong>{selectedCase.item} ({selectedCase.qty})</strong> untuk {selectedCase.kk} di {selectedCase.location}.
             </p>
 
             {modalAction === "verify" && (
               <>
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+                <label className="reksa-form-label" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#013220", display: "block", marginBottom: "8px" }}>
                   Konfirmasi Prioritas Penanganan:
                 </label>
                 <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
@@ -423,12 +620,14 @@ export function PoskoVerifikasiLaporan({
                       style={{
                         flex: 1,
                         padding: "10px",
-                        borderRadius: "8px",
-                        border: priorityChoice === p ? "2px solid var(--forest)" : "1px solid var(--line)",
-                        background: priorityChoice === p ? "rgba(1, 50, 32, 0.08)" : "#fff",
+                        borderRadius: "10px",
+                        border: priorityChoice === p ? "2px solid #013220" : "1px solid #cbd5e1",
+                        background: priorityChoice === p ? "#f0fdf4" : "#ffffff",
                         fontWeight: priorityChoice === p ? 700 : 500,
-                        color: priorityChoice === p ? "var(--forest)" : "var(--muted)",
+                        color: priorityChoice === p ? "#013220" : "#64748b",
                         cursor: "pointer",
+                        fontFamily: "inherit",
+                        transition: "all 0.15s ease",
                       }}
                     >
                       {p}
@@ -436,28 +635,29 @@ export function PoskoVerifikasiLaporan({
                   ))}
                 </div>
 
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-                  Catatan Verifikasi Posko (Akan disimpan di database &amp; Bursa):
+                <label className="reksa-form-label" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#013220", display: "block", marginBottom: "6px" }}>
+                  Catatan Verifikasi Posko (Disimpan di riwayat &amp; Bursa):
                 </label>
                 <textarea
                   rows={3}
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  placeholder="Contoh: Kebutuhan air bersih mendesak, divalidasi RT/RW setempat, dirilis ke Bursa Bantuan Terbuka."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "20px" }}
+                  placeholder="Contoh: Kebutuhan divalidasi sah oleh Koordinator Posko dan dirilis ke Bursa Bantuan Terbuka."
+                  className="reksa-textarea-field"
+                  style={{ marginBottom: "20px", width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
                 />
               </>
             )}
 
             {modalAction === "clarify" && (
               <>
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+                <label className="reksa-form-label" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#013220", display: "block", marginBottom: "6px" }}>
                   Jenis Informasi yang Perlu Diperbaiki:
                 </label>
                 <select
                   value={clarificationCategory}
                   onChange={(e) => setClarificationCategory(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "14px", background: "#fff" }}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", marginBottom: "14px" }}
                 >
                   <option value="Foto / Bukti Fisik Buram / Kurang Jelas">Foto / Bukti Fisik Buram atau Kurang Jelas</option>
                   <option value="Rincian Jumlah Jiwa Rentan & KK Terdampak">Rincian Jumlah Jiwa Rentan (Balita/Lansia) &amp; KK</option>
@@ -466,79 +666,90 @@ export function PoskoVerifikasiLaporan({
                   <option value="Kelengkapan Informasi Lainnya">Kelengkapan Informasi Lainnya</option>
                 </select>
 
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-                  Alasan &amp; Pertanyaan Jelas untuk Masyarakat:
+                <label className="reksa-form-label" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#013220", display: "block", marginBottom: "6px" }}>
+                  Pertanyaan Jelas untuk Warga:
                 </label>
                 <textarea
                   rows={4}
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
                   placeholder="Tuliskan pertanyaan spesifik, misalnya: 'Foto kondisi tandon air buram, mohon unggah ulang foto yang jelas' atau 'Mohon rincikan jumlah balita dan lansia di pos pengungsian ini.'"
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "12px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", marginBottom: "12px" }}
                 />
 
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.88rem", color: "#1e293b", fontWeight: 600, cursor: "pointer", marginBottom: "16px", background: "#f8fafc", padding: "10px 12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.86rem", color: "#013220", fontWeight: 600, cursor: "pointer", marginBottom: "16px", background: "#fbfbf8", padding: "10px 14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
                   <input
                     type="checkbox"
                     checked={requestAttachment}
                     onChange={(e) => setRequestAttachment(e.target.checked)}
-                    style={{ width: "18px", height: "18px", accentColor: "var(--forest)" }}
+                    style={{ width: "16px", height: "16px", accentColor: "#013220" }}
                   />
-                  <span>Meminta masyarakat mengunggah foto atau dokumen bukti tambahan</span>
+                  <span>Meminta warga mengunggah foto atau dokumen bukti tambahan</span>
                 </label>
-
-                <div style={{ fontSize: "0.8rem", color: "#64748b", background: "#f1f5f9", padding: "8px 12px", borderRadius: "6px", marginBottom: "16px" }}>
-                  ℹ️ Permintaan klarifikasi ini akan terkirim langsung ke masyarakat pemilik laporan. Berkas lama tetap tersimpan.
-                </div>
               </>
             )}
 
             {modalAction === "reject" && (
               <>
-                <div style={{ background: "#fef2f2", borderLeft: "4px solid #ef4444", padding: "10px 14px", borderRadius: "0 8px 8px 0", fontSize: "0.84rem", color: "#991b1b", marginBottom: "14px" }}>
-                  ⚠️ <b>Kebijakan Posko:</b> Jika masalah data masih dapat diperbaiki atau dilengkapi oleh masyarakat, gunakan opsi <b>Minta Klarifikasi</b> alih-alih menolak.
+                <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "10px 14px", marginBottom: "14px", fontSize: "0.84rem", color: "#991b1b" }}>
+                  <strong>Kebijakan Posko:</strong> Jika masalah data masih dapat diperbaiki oleh warga, gunakan opsi <strong>Minta Klarifikasi</strong> alih-alih menolak.
                 </div>
 
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+                <label className="reksa-form-label" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#013220", display: "block", marginBottom: "6px" }}>
                   Alasan Spesifik Penolakan (Wajib &amp; Transparan):
                 </label>
                 <textarea
                   rows={3}
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  placeholder="Contoh: Lokasi berada di luar wilayah zona terdampak bencana / Data permohonan duplikat dengan laporan warga di tenda yang sama."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "14px" }}
+                  placeholder="Contoh: Lokasi berada di luar wilayah zona bencana / Data permohonan duplikat dengan laporan warga di tenda yang sama."
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", marginBottom: "14px" }}
                 />
 
-                <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-                  Informasi &amp; Rekomendasi Tindak Lanjut untuk Masyarakat:
+                <label className="reksa-form-label" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#013220", display: "block", marginBottom: "6px" }}>
+                  Informasi &amp; Rekomendasi Tindak Lanjut untuk Warga:
                 </label>
                 <textarea
                   rows={2}
                   value={rejectionFollowUp}
                   onChange={(e) => setRejectionFollowUp(e.target.value)}
                   placeholder="Saran rujukan posko alternatif atau kontak RT/RW setempat..."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "18px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", marginBottom: "18px" }}
                 />
               </>
             )}
 
-            <div className="modal-actions" style={{ marginTop: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "16px" }}>
               <button
                 type="button"
-                className="btn btn-secondary"
                 disabled={isSubmitting}
                 onClick={() => setModalAction(null)}
+                style={{
+                  background: "#ffffff",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  padding: "9px 18px",
+                  fontSize: "0.88rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
               >
                 Batal
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
                 disabled={isSubmitting || (modalAction === "reject" && !notesInput.trim()) || (modalAction === "clarify" && !notesInput.trim())}
                 onClick={handleExecuteAction}
                 style={{
-                  background: modalAction === "reject" ? "#dc2626" : "var(--forest)",
+                  background: modalAction === "reject" ? "#991b1b" : "#013220",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "0.88rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
                 }}
               >
                 {isSubmitting ? "Menyimpan..." : modalAction === "verify" ? "Konfirmasi & Rilis ke Bursa" : modalAction === "clarify" ? "Kirim Permintaan Klarifikasi" : "Simpan Penolakan Resmi"}

@@ -5240,6 +5240,143 @@ input,select,textarea{background:var(--white);border-color:var(--line)}
   justify-content: center;
 }
 
+/* ==========================================================================
+   REVISED TINJAUAN ALOKASI & PENYALURAN (REALTIME BUSINESS DRIVEN)
+   ========================================================================== */
+
+/* Top Action Buttons in Case Detail */
+.btn-case-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.btn-case-action.secondary {
+  background: #ffffff;
+  border-color: rgba(1, 50, 32, 0.18);
+  color: var(--forest);
+}
+
+.btn-case-action.secondary:hover {
+  background: #f5f4ef;
+  border-color: var(--forest);
+}
+
+.btn-case-action.danger {
+  background: #fff5f5;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.btn-case-action.danger:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+/* Telemetry & Quota Balance Strip */
+.alloc-telemetry-banner {
+  background: #fbfbf8;
+  border: 1px solid rgba(1, 50, 32, 0.10);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.alloc-telemetry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.alloc-telemetry-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #556257;
+}
+
+.alloc-telemetry-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.alloc-telemetry-badge.success {
+  background: #eef6f0;
+  color: #15803d;
+  border: 1px solid #b2d7bb;
+}
+
+.alloc-telemetry-badge.progress {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.alloc-telemetry-badge.waiting {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.alloc-telemetry-badge.pending {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.alloc-telemetry-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.alloc-metric-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.alloc-metric-lbl {
+  font-size: 10.5px;
+  color: #758378;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.alloc-metric-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--forest);
+  line-height: 1.25;
+}
+
+.alloc-telemetry-bar-wrap {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5ede7;
+  overflow: hidden;
+}
+
+.alloc-telemetry-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #15803d 0%, #22c55e 100%);
+  transition: width 0.4s ease;
+}
+
+/* Real-Time Operational Mission / Partner Cards */
 .allocation-list-cards {
   display: flex;
   flex-direction: column;
@@ -5247,93 +5384,215 @@ input,select,textarea{background:var(--white);border-color:var(--line)}
   margin-bottom: 18px;
 }
 
-.alloc-item-card {
-  border: 1px solid rgba(1, 50, 32, 0.1);
+.alloc-mission-card {
+  background: #ffffff;
+  border: 1px solid rgba(1, 50, 32, 0.12);
   border-radius: 14px;
-  padding: 14px 16px;
-  background: #fbfbf8;
+  padding: 16px 18px;
+  margin-bottom: 12px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(1, 50, 32, 0.02);
 }
 
-.alloc-item-card.allocated {
-  background: #f3f8f4;
-  border-color: rgba(22, 163, 74, 0.25);
+.alloc-mission-card.active {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.06);
 }
 
-.alloc-item-top {
+.alloc-mission-card.completed {
+  border-color: rgba(22, 163, 74, 0.30);
+  background: #fcfdfc;
+}
+
+.alloc-mission-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 12px;
   margin-bottom: 10px;
 }
 
-.alloc-item-top strong {
-  font-size: 13.5px;
+.alloc-mission-entity-title {
+  font-size: 14px;
+  font-weight: 800;
   color: var(--forest);
+  margin: 0 0 2px 0;
+  line-height: 1.3;
+}
+
+.alloc-mission-entity-sub {
+  font-size: 11.5px;
+  color: #6a7369;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.alloc-mission-code-badge {
+  font-size: 10.5px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  background: rgba(1, 50, 32, 0.07);
+  color: var(--forest);
+  padding: 1px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.alloc-mission-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.alloc-mission-status-pill.success {
+  background: #eef6f0;
+  color: #15803d;
+  border: 1px solid #b2d7bb;
+}
+
+.alloc-mission-status-pill.warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.alloc-mission-status-pill.info {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.alloc-mission-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 14px;
+  background: #fbfbf8;
+  border: 1px solid rgba(1, 50, 32, 0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+.alloc-mission-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.alloc-detail-key {
+  font-size: 10.5px;
+  color: #78857a;
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+.alloc-detail-val {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+/* 4-Step Mini Mission Delivery Stepper */
+.alloc-mission-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(1, 50, 32, 0.10);
+}
+
+.alloc-step-node {
+  text-align: center;
+  position: relative;
+}
+
+.alloc-step-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 0 auto 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.alloc-step-node.passed .alloc-step-circle {
+  background: #15803d;
+  color: #ffffff;
+  border-color: #15803d;
+}
+
+.alloc-step-node.active .alloc-step-circle {
+  background: #d97706;
+  color: #ffffff;
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+}
+
+.alloc-step-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #475569;
+  line-height: 1.2;
   display: block;
 }
 
-.alloc-item-top small {
-  font-size: 11.5px;
-  color: var(--muted);
-}
-
-.alloc-pill {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.alloc-pill.done {
-  background: rgba(22, 163, 74, 0.12);
+.alloc-step-node.passed .alloc-step-lbl {
   color: #15803d;
 }
 
-.alloc-pill.ready {
-  background: rgba(1, 50, 32, 0.08);
-  color: var(--forest);
+.alloc-step-node.active .alloc-step-lbl {
+  color: #b45309;
 }
 
-.alloc-item-bottom {
+/* Standby Partner / Auxiliary Entity Box */
+.alloc-standby-card {
+  background: #fbfbf8;
+  border: 1px solid rgba(1, 50, 32, 0.10);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 10px;
+}
+
+.alloc-standby-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
-.alloc-qty-tag {
-  font-size: 14px;
+.alloc-standby-title {
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--forest);
+  color: #374151;
+  margin: 0 0 2px 0;
 }
 
-.btn-alloc-action {
-  border: 0;
-  background: var(--forest);
-  color: var(--white);
-  font-size: 11.5px;
+.alloc-standby-sub {
+  font-size: 11px;
+  color: #758378;
+}
+
+.alloc-standby-badge {
+  font-size: 10.5px;
   font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-}
-
-.btn-alloc-action:hover {
-  background: #01462d;
-  transform: translateY(-1px);
-}
-
-.alloc-checked {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #15803d;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 .priority-control-box {
@@ -7014,8 +7273,384 @@ input,select,textarea{background:var(--white);border-color:var(--line)}
   color: #9ca3af;
 }
 
+/* =====================================================================
+   REKSA UNIFIED DESIGN SYSTEM: POSKO & MITRA OPERATIONAL MODULES
+   Palette: Forest (#013220), Olive (#80866e), Sage (#c1c3ac), Paper (#edeae1)
+   Surface: #fbfbf8, Line: #d4d5ca / rgba(1,50,32,0.1), Ink: #013220
+   ===================================================================== */
 
+.reksa-card {
+  background: #fbfbf8;
+  border: 1px solid rgba(1, 50, 32, 0.1);
+  border-radius: 18px;
+  padding: 22px 26px;
+  box-shadow: 0 4px 18px rgba(1, 50, 32, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
 
+.reksa-card:hover {
+  border-color: rgba(1, 50, 32, 0.22);
+  box-shadow: 0 8px 24px rgba(1, 50, 32, 0.06);
+}
 
+.reksa-card.pending {
+  border-left: 4px solid #b45309;
+}
 
+.reksa-card.verified {
+  border-left: 4px solid #15803d;
+}
 
+.reksa-card.critical-alert {
+  border-left: 4px solid #dc2626;
+}
+
+.reksa-card.obstacle-alert {
+  border: 1.5px solid #dc2626;
+  border-left: 5px solid #dc2626;
+  background: #fffdfd;
+}
+
+.reksa-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.reksa-card-title {
+  margin: 4px 0 6px;
+  font-size: 1.25rem;
+  color: var(--forest);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.reksa-meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.reksa-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.reksa-meta-item strong {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.reksa-meta-divider {
+  color: var(--sage);
+  font-size: 0.8rem;
+}
+
+/* Badges */
+.reksa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.reksa-badge.success {
+  background: #eef6f0;
+  color: #15803d;
+  border: 1px solid #b2d7bb;
+}
+
+.reksa-badge.warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.reksa-badge.critical {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.reksa-badge.info {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.reksa-badge.neutral {
+  background: #f4f3ee;
+  color: #687064;
+  border: 1px solid #d4d5ca;
+}
+
+/* Info & Alert Callout Boxes */
+.reksa-info-box {
+  background: #f6f5ef;
+  border: 1px solid #dcdad0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  color: var(--forest);
+  line-height: 1.5;
+}
+
+.reksa-info-box.alert-amber {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.reksa-info-box.alert-green {
+  background: #eef6f0;
+  border-color: #b2d7bb;
+  color: #15803d;
+}
+
+.reksa-info-box.alert-red {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.reksa-info-box.alert-teal {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+  color: #0f766e;
+}
+
+/* Grid & Telemetry Strips */
+.reksa-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 768px) {
+  .reksa-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reksa-telemetry-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  background: #f5f4ed;
+  border: 1px solid #dedcca;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-top: 4px;
+}
+
+.reksa-telemetry-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reksa-telemetry-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #687064;
+}
+
+.reksa-telemetry-val {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--forest);
+  font-family: inherit;
+}
+
+.reksa-telemetry-val.success {
+  color: #15803d;
+}
+
+.reksa-telemetry-val.warning {
+  color: #b45309;
+}
+
+.reksa-telemetry-val.critical {
+  color: #dc2626;
+}
+
+/* Action Button Groups */
+.reksa-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reksa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.reksa-btn-primary {
+  background: var(--forest);
+  color: #ffffff;
+  border: 1px solid var(--forest);
+}
+
+.reksa-btn-primary:hover {
+  background: #0a4d33;
+  border-color: #0a4d33;
+  transform: translateY(-1px);
+}
+
+.reksa-btn-secondary {
+  background: #ffffff;
+  color: var(--forest);
+  border: 1px solid var(--sage);
+}
+
+.reksa-btn-secondary:hover {
+  background: #f4f3ee;
+  border-color: var(--olive);
+  transform: translateY(-1px);
+}
+
+.reksa-btn-success {
+  background: #15803d;
+  color: #ffffff;
+  border: 1px solid #15803d;
+}
+
+.reksa-btn-success:hover {
+  background: #166534;
+  transform: translateY(-1px);
+}
+
+.reksa-btn-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.reksa-btn-warning:hover {
+  background: #fef3c7;
+  transform: translateY(-1px);
+}
+
+.reksa-btn-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.reksa-btn-danger:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
+}
+
+/* Inputs, Selects, and Textareas */
+.reksa-form-label {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--forest);
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+.reksa-input-field {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #c1c3ac;
+  background: #ffffff;
+  color: var(--forest);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.reksa-input-field:focus {
+  border-color: var(--forest);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 50, 32, 0.12);
+}
+
+.reksa-textarea-field {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #c1c3ac;
+  background: #ffffff;
+  color: var(--forest);
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.reksa-textarea-field:focus {
+  border-color: var(--forest);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 50, 32, 0.12);
+}
+
+/* Empty State Card */
+.reksa-empty-state {
+  background: #fbfbf8;
+  border: 1px dashed rgba(1, 50, 32, 0.2);
+  border-radius: 18px;
+  padding: 48px 24px;
+  text-align: center;
+  max-width: 580px;
+  margin: 24px auto;
+}
+
+.reksa-empty-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: rgba(1, 50, 32, 0.08);
+  color: var(--forest);
+  display: grid;
+  placeItems: center;
+  margin: 0 auto 16px;
+  font-size: 24px;
+}
+
+.reksa-empty-title {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.reksa-empty-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}

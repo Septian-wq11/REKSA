@@ -7,6 +7,7 @@ use App\Models\KebutuhanWarga;
 use App\Models\BursaBantuan;
 use App\Models\MisiPenyaluran;
 use App\Models\LogAktivitas;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -218,7 +219,8 @@ class KebutuhanWargaController extends Controller
             'priority' => 'nullable|string',
         ]);
 
-        $verifierName = $request->user() ? $request->user()->name : 'Siti Rahma (Koordinator Posko)';
+        $poskoUserId = $request->user()?->id ?? User::where('role', 'posko')->value('id') ?? User::first()?->id;
+        $verifierName = $request->user() ? $request->user()->name : (User::find($poskoUserId)?->name ?? 'Siti Rahma (Koordinator Posko)');
 
         if ($validated['action'] === 'verify_and_publish' || $validated['action'] === 'verify') {
             $rawPriority = $validated['priority'] ?? $case->tingkat_urgensi;
@@ -232,7 +234,7 @@ class KebutuhanWargaController extends Controller
                 'status' => 'Kebutuhan Terbuka',
                 'tingkat_urgensi' => $priority,
                 'catatan_verifikasi_posko' => $validated['catatan'] ?? 'Data KK divalidasi posko, dirilis ke Bursa Bantuan Terbuka.',
-                'verified_by' => $request->user()?->id ?? 2,
+                'verified_by' => $poskoUserId,
                 'verified_at' => now(),
             ]);
 

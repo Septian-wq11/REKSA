@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BursaBantuan;
 use App\Models\MisiPenyaluran;
 use App\Models\LogAktivitas;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -52,9 +53,11 @@ class BursaBantuanController extends Controller
         ]);
 
         $user = $request->user();
-        $responderName = $user ? $user->name : 'Arif Nugroho (Satgas BPBD)';
-        $org = $user && $user->organization ? $user->organization : ($validated['organisasi'] ?? 'BPBD / Mitra Kemanusiaan');
-        $responderId = $user ? $user->id : 3;
+        $defaultMitra = User::where('role', 'responder')->first();
+
+        $responderName = $user ? $user->name : ($defaultMitra?->name ?? 'Arif Nugroho (Satgas BPBD)');
+        $org = $user && $user->organization ? $user->organization : ($validated['organisasi'] ?? ($defaultMitra?->organization ?? 'BPBD / Mitra Kemanusiaan'));
+        $responderId = $user ? $user->id : ($defaultMitra?->id ?? null);
         $claimedVol = $validated['claimed_volume'] ?? $bursa->target_volume;
 
         // Update status menjadi Klaim Diajukan (Menunggu persetujuan Koordinator Posko)
@@ -123,13 +126,15 @@ class BursaBantuanController extends Controller
 
         // Buat Misi Penyaluran Resmi untuk Mitra
         $kodeMisi = 'MISI-ASG-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+        $defaultMitraId = User::where('role', 'responder')->value('id') ?? User::first()?->id;
+        $poskoUserId = $request->user()?->id ?? User::where('role', 'posko')->value('id') ?? User::first()?->id;
 
         $misi = MisiPenyaluran::create([
             'kode_misi' => $kodeMisi,
             'kebutuhan_id' => $bursa->kebutuhan_id,
             'bursa_id' => $bursa->id,
             'posko_id' => $bursa->posko_id,
-            'responder_id' => $bursa->claimed_by ?? 3,
+            'responder_id' => $bursa->claimed_by ?: $defaultMitraId,
             'responder_name' => $responderName,
             'organisasi' => $org,
             'armada_info' => $bursa->claimed_armada ?? 'Truk Tangki No. 02 · Kapasitas 500 L',
@@ -139,7 +144,7 @@ class BursaBantuanController extends Controller
             'catatan_lapangan' => 'Alokasi telah disetujui Koordinator Posko. Misi penyaluran aktif.',
         ]);
 
-        $approverName = $request->user() ? $request->user()->name : 'Siti Rahma (Koordinator Posko)';
+        $approverName = $request->user() ? $request->user()->name : (User::find($poskoUserId)?->name ?? 'Siti Rahma (Koordinator Posko)');
 
         LogAktivitas::create([
             'kebutuhan_id' => $bursa->kebutuhan_id,

@@ -78,7 +78,7 @@ export function PoskoDistribusiPenerimaan({
           <span className="eyebrow">Pengawasan Logistik &amp; Serah Terima (PRD Bab 5.1 &amp; 5.2 Tahap 8-9)</span>
           <h1>Distribusi &amp; Penerimaan Lapangan</h1>
           <p>
-            Pantau misi pergerakan armada mitra di lapangan, tangani laporan kendala akses, dan lakukan konfirmasi penerimaan fisik terukur.
+            Pantau misi pergerakan armada mitra di lapangan, tangani laporan kendala akses, dan lakukan konfirmasi penerimaan fisik terukur (BAST).
           </p>
         </div>
         <div className="posko-status-live-badge">
@@ -140,10 +140,11 @@ export function PoskoDistribusiPenerimaan({
 
       {/* LIST OF MISSIONS */}
       {filteredMissions.length === 0 ? (
-        <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: "18px", padding: "48px 24px", textAlign: "center" }}>
-          <h3 style={{ color: "var(--forest)", margin: "0 0 8px" }}>Tidak Ada Misi Penyaluran</h3>
-          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.9rem" }}>
-            Belum ada armada mitra yang diberangkatkan atau seluruh pengiriman telah tuntas.
+        <div className="reksa-empty-state">
+          <div className="reksa-empty-icon">🚚</div>
+          <h3 className="reksa-empty-title">Tidak Ada Misi Penyaluran</h3>
+          <p className="reksa-empty-desc">
+            Belum ada armada mitra yang diberangkatkan atau seluruh pengiriman pada kategori ini telah selesai.
           </p>
         </div>
       ) : (
@@ -153,73 +154,59 @@ export function PoskoDistribusiPenerimaan({
             const isArrived = m.status_tahapan === "Tiba di Lokasi & Diserahkan" || m.status_tahapan === "Menunggu Konfirmasi Penerimaan";
             const hasObstacle = Boolean(m.status_kendala);
 
-            const matchedCase = cases.find((c) => c.id === m.kebutuhan?.kode_kasus || c.id === `RK-${m.kebutuhan_id}`);
+            const matchedCase = cases.find((c) => c.id === m.kebutuhan?.kode_kasus || c.id === `RK-${m.kebutuhan_id}` || c.id === `RK-2026-000${m.kebutuhan_id}`);
 
             return (
               <div
                 key={m.id}
-                style={{
-                  background: "#ffffff",
-                  border: hasObstacle ? "1.5px solid #ef4444" : isArrived ? "1.5px solid rgba(245, 158, 11, 0.4)" : "1px solid var(--line)",
-                  borderRadius: "18px",
-                  padding: "22px 26px",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.02)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
-                }}
+                className={`reksa-card ${hasObstacle ? "obstacle-alert" : isCompleted ? "verified" : isArrived ? "pending" : ""}`}
               >
                 {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                <div className="reksa-card-header">
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                      <span style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--forest)", fontFamily: "monospace" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 800, fontSize: "1.08rem", color: "var(--forest)", fontFamily: "monospace" }}>
                         {m.kode_misi}
                       </span>
-                      <span
-                        style={{
-                          fontSize: "0.78rem",
-                          fontWeight: 700,
-                          padding: "3px 10px",
-                          borderRadius: "12px",
-                          background: isCompleted ? "rgba(16, 185, 129, 0.15)" : isArrived ? "rgba(245, 158, 11, 0.15)" : "rgba(59, 130, 246, 0.15)",
-                          color: isCompleted ? "#047857" : isArrived ? "#b45309" : "#1d4ed8",
-                        }}
-                      >
+                      <span className={`reksa-badge ${isCompleted ? "success" : isArrived ? "warning" : "info"}`}>
                         Tahapan: {m.status_tahapan}
                       </span>
                       {hasObstacle && (
-                        <span style={{ fontSize: "0.78rem", fontWeight: 700, padding: "3px 10px", borderRadius: "12px", background: "rgba(239, 68, 68, 0.15)", color: "#b91c1c" }}>
+                        <span className="reksa-badge critical">
                           ⚠️ Ada Kendala Lapangan
                         </span>
                       )}
                     </div>
-                    <h3 style={{ margin: "2px 0 4px", fontSize: "1.2rem", color: "var(--ink)", fontWeight: 700 }}>
+                    <h3 className="reksa-card-title">
                       Muatan: {m.muatan} · {m.organisasi}
                     </h3>
-                    <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-                      Narahubung Armada: <b>{m.responder_name}</b> · {m.armada_info}
+                    <div className="reksa-meta-list">
+                      <span className="reksa-meta-item">
+                        Narahubung Armada: <strong>{m.responder_name}</strong>
+                      </span>
+                      <span className="reksa-meta-divider">·</span>
+                      <span className="reksa-meta-item">
+                        Armada: <strong>{m.armada_info}</strong>
+                      </span>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <div className="reksa-btn-group">
                     {matchedCase && (
                       <button
                         type="button"
-                        className="btn btn-secondary"
-                        style={{ padding: "8px 14px", minHeight: "38px", fontSize: "0.85rem" }}
+                        className="reksa-btn reksa-btn-secondary"
                         onClick={() => onSelectCase(matchedCase)}
                       >
-                        Lihat Kasus
+                        Buka Kasus →
                       </button>
                     )}
 
                     {!isCompleted && (
                       <button
                         type="button"
-                        className="btn btn-primary"
-                        style={{ padding: "8px 16px", minHeight: "38px", fontSize: "0.85rem", background: isArrived ? "#047857" : "var(--forest)" }}
+                        className="reksa-btn reksa-btn-success"
                         onClick={() => openConfirmModal(m)}
                       >
                         ✓ Konfirmasi Penerimaan
@@ -227,58 +214,45 @@ export function PoskoDistribusiPenerimaan({
                     )}
 
                     {isCompleted && (
-                      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#047857", padding: "6px 12px", background: "rgba(16, 185, 129, 0.1)", borderRadius: "8px" }}>
+                      <span className="reksa-badge success" style={{ padding: "6px 14px", fontSize: "0.85rem" }}>
                         ✓ Diterima Tuntas
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Obstacle Alert Banner (Bab 6.3 Tahap 5 & Bab 7.4) */}
+                {/* Obstacle Alert Banner */}
                 {hasObstacle && (
-                  <div
-                    style={{
-                      background: "rgba(239, 68, 68, 0.08)",
-                      borderLeft: "4px solid #ef4444",
-                      padding: "12px 16px",
-                      borderRadius: "0 10px 10px 0",
-                      fontSize: "0.88rem",
-                      color: "#991b1b",
-                    }}
-                  >
+                  <div className="reksa-info-box alert-red">
                     <strong>🚨 LAPORAN KENDALA DARI ARMADA MITRA: [{m.status_kendala}]</strong>
-                    <p style={{ margin: "4px 0 0", color: "#7f1d1d" }}>{m.catatan_lapangan}</p>
+                    <p style={{ margin: "4px 0 0" }}>{m.catatan_lapangan}</p>
                   </div>
                 )}
 
-                {/* Logistics details */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                    gap: "10px",
-                    background: "#f8fafc",
-                    padding: "12px 16px",
-                    borderRadius: "10px",
-                    fontSize: "0.86rem",
-                  }}
-                >
-                  <div>
-                    <span style={{ color: "var(--muted)", display: "block" }}>Tujuan Distribusi:</span>
-                    <strong>{m.kebutuhan ? `${m.kebutuhan.desa || ''}, ${m.kebutuhan.kecamatan || ''}` : 'Posko Lapangan'}</strong>
+                {/* Logistics telemetry strip */}
+                <div className="reksa-telemetry-strip">
+                  <div className="reksa-telemetry-item">
+                    <span className="reksa-telemetry-label">Tujuan Distribusi</span>
+                    <span className="reksa-telemetry-val">
+                      {m.kebutuhan ? `${m.kebutuhan.desa || ''}, ${m.kebutuhan.kecamatan || ''}` : 'Posko Lapangan'}
+                    </span>
                   </div>
-                  <div>
-                    <span style={{ color: "var(--muted)", display: "block" }}>Jumlah Diterima:</span>
-                    <strong style={{ color: m.jumlah_diterima ? "#047857" : "var(--ink)" }}>
-                      {m.jumlah_diterima || "Menunggu Serah Terima"}
-                    </strong>
+                  <div className="reksa-telemetry-item">
+                    <span className="reksa-telemetry-label">Muatan Terkirim</span>
+                    <span className="reksa-telemetry-val">{m.muatan}</span>
+                  </div>
+                  <div className="reksa-telemetry-item">
+                    <span className="reksa-telemetry-label">Status Serah Terima</span>
+                    <span className={`reksa-telemetry-val ${isCompleted ? "success" : "warning"}`}>
+                      {m.jumlah_diterima ? `${m.jumlah_diterima} (Sah)` : "Menunggu Serah Terima"}
+                    </span>
                   </div>
                   {m.selisih && (
-                    <div>
-                      <span style={{ color: "var(--muted)", display: "block" }}>Selisih Fisik:</span>
-                      <strong style={{ color: m.selisih !== "0" ? "#dc2626" : "#047857" }}>
+                    <div className="reksa-telemetry-item">
+                      <span className="reksa-telemetry-label">Selisih Fisik</span>
+                      <span className={`reksa-telemetry-val ${m.selisih !== "0" ? "critical" : "success"}`}>
                         {m.selisih}
-                      </strong>
+                      </span>
                     </div>
                   )}
                 </div>
@@ -296,10 +270,10 @@ export function PoskoDistribusiPenerimaan({
               Konfirmasi Penerimaan Resmi: {confirmModalMisi.kode_misi}
             </h2>
             <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "16px" }}>
-              Armada: <b>{confirmModalMisi.organisasi}</b> · Muatan Dikirim: <b>{confirmModalMisi.muatan}</b>
+              Armada: <strong>{confirmModalMisi.organisasi}</strong> · Muatan Dikirim: <strong>{confirmModalMisi.muatan}</strong>
             </p>
 
-            <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+            <label className="reksa-form-label">
               Jumlah Aktual yang Dikonfirmasi Diterima:
             </label>
             <input
@@ -307,10 +281,11 @@ export function PoskoDistribusiPenerimaan({
               value={receivedVolumeInput}
               onChange={(e) => setReceivedVolumeInput(e.target.value)}
               placeholder="Contoh: 500 L atau 380 Paket"
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.95rem", marginBottom: "14px" }}
+              className="reksa-input-field"
+              style={{ marginBottom: "14px" }}
             />
 
-            <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+            <label className="reksa-form-label">
               Catatan Berita Acara Penerimaan (Koordinator Posko / Warga):
             </label>
             <textarea
@@ -318,13 +293,14 @@ export function PoskoDistribusiPenerimaan({
               value={confirmNotesInput}
               onChange={(e) => setConfirmNotesInput(e.target.value)}
               placeholder="Contoh: Bantuan diterima fisik dalam kondisi baik, disaksikan perwakilan RT."
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.88rem", marginBottom: "18px" }}
+              className="reksa-textarea-field"
+              style={{ marginBottom: "18px" }}
             />
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ marginTop: "12px" }}>
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="reksa-btn reksa-btn-secondary"
                 disabled={isSubmitting}
                 onClick={() => setConfirmModalMisi(null)}
               >
@@ -332,10 +308,9 @@ export function PoskoDistribusiPenerimaan({
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="reksa-btn reksa-btn-primary"
                 disabled={isSubmitting}
                 onClick={handleConfirmReceipt}
-                style={{ background: "var(--forest)" }}
               >
                 {isSubmitting ? "Menyimpan..." : "Konfirmasi & Rekonsiliasi"}
               </button>

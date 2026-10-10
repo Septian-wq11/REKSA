@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MisiItem, apiService } from "../../services/api";
+import { AppIcon } from "../common/Icons";
 
 interface MitraMisiPenyaluranProps {
   misiList: MisiItem[];
@@ -67,6 +68,24 @@ export function MitraMisiPenyaluran({
     }
   };
 
+  const handleConfirmFinalReceipt = async (misi: MisiItem) => {
+    try {
+      setIsUpdating(true);
+      const res = await apiService.confirmReceiptKebutuhan(misi.kebutuhan_id, {
+        diterima_volume: misi.muatan,
+        catatan: "Dikonfirmasi serah terima tuntas oleh pelaksana armada di lokasi bencana.",
+      });
+      if (res.success) {
+        notify?.(`Misi penyaluran ${misi.kode_misi} berhasil diselesaikan tuntas! Kasus resmi selesai.`);
+        await onRefresh?.();
+      }
+    } catch (err: any) {
+      notify?.(err?.message || "Gagal mengonfirmasi serah terima tuntas.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleReportObstacle = async () => {
     if (!obstacleModalMisi) return;
     try {
@@ -93,34 +112,35 @@ export function MitraMisiPenyaluran({
       <main className="workspace mitra-tasks-workspace">
         <div className="workspace-title">
           <div>
-            <span className="eyebrow">Pelaksanaan Operasional Lapangan (PRD Bab 6.1 &amp; 6.3 Tahap 4)</span>
+            <span className="eyebrow">OPERASIONAL LOGISTIK LAPANGAN</span>
             <h1>Misi Penyaluran Aktif</h1>
             <p>
-              Tidak ada misi penyaluran aktif yang sedang berjalan saat ini.
+              Tidak ada surat tugas misi penyaluran aktif yang sedang berjalan saat ini.
             </p>
           </div>
         </div>
 
-        <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: "18px", padding: "48px 24px", textAlign: "center", maxWidth: "600px", margin: "20px auto" }}>
-          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "rgba(1, 50, 32, 0.08)", color: "var(--forest)", display: "grid", placeItems: "center", margin: "0 auto 16px", fontSize: "24px" }}>
-            🚚
+        <div className="reksa-empty-state">
+          <div className="reksa-empty-icon" style={{ background: "#f0f4f1", color: "var(--forest)" }}>
+            <AppIcon name="truck" size={32} />
           </div>
-          <h3 style={{ margin: "0 0 8px", color: "var(--forest)" }}>Semua Misi Telah Selesai</h3>
-          <p style={{ color: "var(--muted)", margin: "0 0 20px", fontSize: "0.92rem", lineHeight: 1.5 }}>
-            Anda belum memiliki misi penyaluran aktif. Ajukan komitmen bantuan pada Bursa Bantuan Terbuka untuk mendapatkan penugasan resmi dari Posko.
+          <h3 className="reksa-empty-title">Semua Misi Telah Selesai Tuntas</h3>
+          <p className="reksa-empty-desc">
+            Organisasi Anda belum memiliki misi distribusi yang sedang berjalan. Ajukan komitmen bantuan pada Bursa Bantuan Terbuka untuk mendapatkan penugasan resmi dari Posko BPBD.
           </p>
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "20px" }}>
             <button
               type="button"
-              className="btn btn-primary"
-              style={{ background: "var(--forest)" }}
+              className="reksa-btn reksa-btn-primary"
               onClick={onNavigateToBursa}
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
             >
-              Buka Bursa Bantuan Terbuka
+              <span>Buka Bursa Bantuan Terbuka</span>
+              <AppIcon name="arrow-right" size={15} />
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="reksa-btn reksa-btn-secondary"
               onClick={onNavigateToHistory}
             >
               Lihat Riwayat Selesai
@@ -137,19 +157,21 @@ export function MitraMisiPenyaluran({
     <main className="workspace mitra-tasks-workspace">
       <div className="workspace-title">
         <div>
-          <span className="eyebrow">Pelaksanaan Operasional Lapangan (PRD Bab 6.1 &amp; 6.3 Tahap 4-5)</span>
+          <span className="eyebrow">PELAKSANAAN OPERASIONAL LOGISTIK</span>
           <h1>Konsol Misi Penyaluran Lapangan</h1>
           <p>
-            Perbarui tahapan status pergerakan armada secara real-time, laporkan kendala medan atau perubahan kuantitas kepada Posko.
+            Perbarui tahapan pergerakan armada secara real-time, laporkan hambatan rute bila ada kendala, dan tuntaskan serah terima logistik di titik tujuan.
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="reksa-btn reksa-btn-secondary"
             onClick={onNavigateToHistory}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            Riwayat Penyaluran →
+            <span>Riwayat Selesai</span>
+            <AppIcon name="arrow-right" size={14} />
           </button>
         </div>
       </div>
@@ -172,75 +194,84 @@ export function MitraMisiPenyaluran({
 
       {/* ACTIVE MISSION CONSOLE CARD */}
       <div
+        className="reksa-card"
         style={{
+          padding: "26px",
           background: "#ffffff",
-          border: currentMission.status_kendala ? "1.5px solid #ef4444" : "1px solid var(--line)",
-          borderRadius: "20px",
-          padding: "28px",
-          boxShadow: "0 6px 24px rgba(0,0,0,0.03)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
+          borderRadius: "18px",
+          border: currentMission.status_kendala
+            ? "1px solid #fca5a5"
+            : "1px solid rgba(1, 50, 32, 0.12)",
         }}
       >
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "14px", marginBottom: "20px" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-              <span style={{ fontWeight: 800, fontSize: "1.2rem", color: "var(--forest)", fontFamily: "monospace" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px", flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 800, fontSize: "1.15rem", color: "var(--forest)", fontFamily: "monospace" }}>
                 {currentMission.kode_misi}
               </span>
-              <span style={{ fontSize: "0.82rem", fontWeight: 700, padding: "4px 12px", borderRadius: "14px", background: "rgba(59, 130, 246, 0.15)", color: "#1d4ed8" }}>
-                {currentMission.status_tahapan}
+              <span className="reksa-badge info">
+                Tahap: {currentMission.status_tahapan}
               </span>
             </div>
-            <h2 style={{ fontSize: "1.4rem", margin: "0 0 6px", color: "var(--ink)", fontWeight: 700 }}>
-              Penyaluran: {currentMission.muatan}
+            <h2 style={{ margin: "0 0 10px", fontSize: "1.35rem", color: "var(--forest)", fontWeight: 700 }}>
+              Muatan Distribusi: <span style={{ color: "#166534" }}>{currentMission.muatan}</span>
             </h2>
-            <div style={{ fontSize: "0.9rem", color: "var(--muted)", display: "flex", flexWrap: "wrap", gap: "14px" }}>
-              <span>🚛 {currentMission.armada_info}</span>
-              <span>👤 Petugas / Narahubung: <b>{currentMission.responder_name}</b></span>
-              <span>🏢 {currentMission.organisasi}</span>
+
+            {/* Meta Row */}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "14px", color: "var(--muted)", fontSize: "0.85rem" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                <AppIcon name="truck" size={14} />
+                <span>Armada: <strong style={{ color: "var(--ink)" }}>{currentMission.armada_info}</strong></span>
+              </span>
+              <span>•</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                <AppIcon name="user" size={14} />
+                <span>Petugas PIC: <strong style={{ color: "var(--ink)" }}>{currentMission.responder_name}</strong></span>
+              </span>
+              <span>•</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                <AppIcon name="users" size={14} />
+                <span>{currentMission.organisasi}</span>
+              </span>
             </div>
           </div>
 
           <button
             type="button"
-            className="btn btn-secondary"
-            style={{ borderColor: "#ef4444", color: "#dc2626" }}
+            className="reksa-btn reksa-btn-danger"
             onClick={() => {
               setObstacleModalMisi(currentMission);
               setObstacleType("Akses Jalan Terputus (Longsor)");
               setObstacleNotes("");
             }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "7px", borderRadius: "10px" }}
           >
-            ⚠️ Laporkan Kendala Lapangan
+            <AppIcon name="alert" size={15} />
+            <span>Laporkan Kendala Lapangan</span>
           </button>
         </div>
 
         {/* Obstacle Alert Banner if active */}
         {currentMission.status_kendala && (
-          <div
-            style={{
-              background: "rgba(239, 68, 68, 0.08)",
-              borderLeft: "4px solid #ef4444",
-              padding: "14px 18px",
-              borderRadius: "0 10px 10px 0",
-              fontSize: "0.9rem",
-              color: "#991b1b",
-            }}
-          >
-            <strong>🚨 KENDALA TERLAPOR: [{currentMission.status_kendala}]</strong>
-            <p style={{ margin: "4px 0 0", color: "#7f1d1d" }}>{currentMission.catatan_lapangan}</p>
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", padding: "14px 16px", marginBottom: "20px", display: "flex", alignItems: "flex-start", gap: "12px", color: "#991b1b", fontSize: "0.88rem" }}>
+            <div style={{ marginTop: "2px", flexShrink: 0 }}>
+              <AppIcon name="alert" size={18} />
+            </div>
+            <div>
+              <strong>KENDALA TERLAPOR: [{currentMission.status_kendala}]</strong>
+              <p style={{ margin: "4px 0 0", color: "#7f1d1d" }}>{currentMission.catatan_lapangan}</p>
+            </div>
           </div>
         )}
 
-        {/* 5-STAGE PROGRESSION TRACKER (PRD Bab 8.3 & Bab 11 AC-11) */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 700, color: "var(--forest)", marginBottom: "14px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        {/* 5-STAGE PROGRESSION TRACKER */}
+        <div style={{ marginBottom: "24px" }}>
+          <label className="reksa-form-label" style={{ textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px", fontSize: "0.78rem" }}>
             Tahapan Status Operasional Armada (5 Tahap):
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
             {states.map((s, i) => {
               const isDone = i <= currentIdx;
               const isCurrent = i === currentIdx;
@@ -249,31 +280,32 @@ export function MitraMisiPenyaluran({
                 <div
                   key={s}
                   style={{
-                    background: isCurrent ? "rgba(1, 50, 32, 0.08)" : isDone ? "#f0fdf4" : "#f8fafc",
-                    border: isCurrent ? "2px solid var(--forest)" : isDone ? "1px solid #86efac" : "1px solid var(--line)",
+                    background: isCurrent ? "#eef6f0" : isDone ? "#f7faf7" : "#ffffff",
+                    border: isCurrent ? "2px solid var(--forest)" : isDone ? "1px solid #b2d7bb" : "1px solid rgba(1, 50, 32, 0.12)",
                     borderRadius: "12px",
                     padding: "12px 10px",
                     textAlign: "center",
-                    position: "relative",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   <div
                     style={{
-                      width: "24px",
-                      height: "24px",
+                      width: "26px",
+                      height: "26px",
                       borderRadius: "50%",
-                      background: isDone ? "var(--forest)" : "#cbd5e1",
-                      color: "#fff",
+                      background: isDone ? "var(--forest)" : "#d4d5ca",
+                      color: "#ffffff",
                       fontSize: "12px",
-                      display: "grid",
-                      placeItems: "center",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       margin: "0 auto 6px",
                       fontWeight: 700,
                     }}
                   >
-                    {isDone ? "✓" : i + 1}
+                    {isDone ? <AppIcon name="check" size={13} /> : i + 1}
                   </div>
-                  <strong style={{ display: "block", fontSize: "0.78rem", color: isCurrent ? "var(--forest)" : "var(--ink)", lineHeight: 1.3 }}>
+                  <strong style={{ display: "block", fontSize: "0.8rem", color: isCurrent ? "var(--forest)" : "var(--ink)", lineHeight: 1.3 }}>
                     {s}
                   </strong>
                 </div>
@@ -283,61 +315,93 @@ export function MitraMisiPenyaluran({
         </div>
 
         {/* ACTION CONTROLS */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", paddingTop: "14px", borderTop: "1px solid var(--line)" }}>
-          <div style={{ fontSize: "0.88rem", color: "var(--muted)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", paddingTop: "16px", borderTop: "1px solid rgba(1, 50, 32, 0.08)" }}>
+          <div style={{ fontSize: "0.86rem", color: "var(--muted)" }}>
             {currentIdx < 3 ? (
-              <span>Klik tombol di kanan setelah armada menyelesaikan tahapan saat ini.</span>
+              <span>Klik tombol aksi begitu armada siap bergerak atau telah menyelesaikan tahapan saat ini.</span>
             ) : currentIdx === 3 ? (
-              <span style={{ color: "#d97706", fontWeight: 600 }}>
-                Logistik diserahkan! Beralih ke tahap menunggu konfirmasi dari Koordinator/Warga.
+              <span style={{ color: "#b45309", fontWeight: 600 }}>
+                Logistik telah diserahkan di lokasi. Siap beralih ke konfirmasi penerimaan fisik terukur.
               </span>
             ) : (
-              <span style={{ color: "#047857", fontWeight: 600 }}>
-                ✓ Menunggu konfirmasi penerimaan fisik dari Koordinator Posko / Masyarakat.
+              <span style={{ color: "#15803d", fontWeight: 600 }}>
+                Logistik telah tiba dan siap dituntaskan dengan penandatanganan serah terima.
               </span>
             )}
           </div>
 
-          {currentIdx < 4 && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              style={{ background: "var(--forest)", minHeight: "44px", padding: "0 24px" }}
-              disabled={isUpdating}
-              onClick={() => handleAdvanceStep(currentMission)}
-            >
-              {isUpdating
-                ? "Menyimpan..."
-                : currentIdx === 0
-                ? "Armada Siap Berangkat →"
-                : currentIdx === 1
-                ? "Mulai Perjalanan Menuju Lokasi →"
-                : currentIdx === 2
-                ? "Tiba di Lokasi &amp; Serahkan Bantuan →"
-                : "Ajukan Menunggu Konfirmasi →"}
-            </button>
-          )}
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            {currentIdx < 4 && (
+              <button
+                type="button"
+                className="reksa-btn reksa-btn-primary"
+                disabled={isUpdating}
+                onClick={() => handleAdvanceStep(currentMission)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+              >
+                <span>
+                  {isUpdating
+                    ? "Menyimpan..."
+                    : currentIdx === 0
+                    ? "Armada Siap Berangkat"
+                    : currentIdx === 1
+                    ? "Mulai Perjalanan Menuju Lokasi"
+                    : currentIdx === 2
+                    ? "Tiba di Lokasi & Serahkan Bantuan"
+                    : "Ajukan Menunggu Konfirmasi"}
+                </span>
+                <AppIcon name="arrow-right" size={14} />
+              </button>
+            )}
+
+            {(currentIdx === 3 || currentIdx === 4) && (
+              <button
+                type="button"
+                className="reksa-btn reksa-btn-success"
+                disabled={isUpdating}
+                onClick={() => handleConfirmFinalReceipt(currentMission)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+              >
+                <AppIcon name="check" size={15} />
+                <span>{isUpdating ? "Memproses..." : "Konfirmasi Serah Terima Selesai Tuntas"}</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* OBSTACLE MODAL */}
       {obstacleModalMisi && (
         <div className="modal-backdrop">
-          <div className="modal" style={{ width: "min(500px, 95%)", textAlign: "left" }}>
-            <h2 style={{ fontSize: "1.3rem", color: "#dc2626", marginBottom: "6px" }}>
-              ⚠️ Laporkan Kendala Lapangan: {obstacleModalMisi.kode_misi}
-            </h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "16px" }}>
-              Posko Koordinator akan segera menerima notifikasi darurat untuk mengambil langkah mitigasi.
+          <div className="modal" style={{ width: "min(520px, 95%)", textAlign: "left", borderRadius: "18px", padding: "26px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+              <div>
+                <span className="eyebrow" style={{ color: "#b91c1c" }}>LAPORAN SITUASI DARURAT</span>
+                <h2 style={{ fontSize: "1.25rem", color: "#b91c1c", margin: "4px 0 0", fontWeight: 800 }}>
+                  Kendala Lapangan: {obstacleModalMisi.kode_misi}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setObstacleModalMisi(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: "4px" }}
+              >
+                <AppIcon name="x" size={18} />
+              </button>
+            </div>
+
+            <p style={{ color: "var(--muted)", fontSize: "0.86rem", marginBottom: "16px" }}>
+              Posko Koordinator BPBD akan segera menerima laporan ini untuk melakukan koordinasi penyesuaian rute atau bantuan darurat.
             </p>
 
-            <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
+            <label className="reksa-form-label">
               Kategori Kendala:
             </label>
             <select
               value={obstacleType}
               onChange={(e) => setObstacleType(e.target.value)}
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.9rem", marginBottom: "14px" }}
+              className="reksa-input-field"
+              style={{ marginBottom: "14px", borderRadius: "8px" }}
             >
               <option value="Akses Jalan Terputus (Longsor)">Akses Jalan Terputus (Longsor / Jembatan Rusak)</option>
               <option value="Kerusakan Armada / Kendaraan Mogok">Kerusakan Armada / Kendaraan Mogok / Pecah Ban</option>
@@ -347,21 +411,22 @@ export function MitraMisiPenyaluran({
               <option value="Lainnya">Kendala Operasional Lainnya</option>
             </select>
 
-            <label style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: "var(--ink)", marginBottom: "6px" }}>
-              Rincian &amp; Tindakan Mitigasi yang Diambil:
+            <label className="reksa-form-label">
+              Rincian &amp; Tindakan Mitigasi Lapangan:
             </label>
             <textarea
               rows={4}
               value={obstacleNotes}
               onChange={(e) => setObstacleNotes(e.target.value)}
-              placeholder="Contoh: Jalur utama tertutup longsor, armada memutar via jalur alternatif. Estimasi waktu kedatangan tertunda 45 menit."
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", fontSize: "0.88rem", marginBottom: "18px" }}
+              placeholder="Contoh: Jalur utama tertutup longsor, armada memutar via rute alternatif. Estimasi waktu kedatangan tertunda 40 menit."
+              className="reksa-textarea-field"
+              style={{ marginBottom: "20px", borderRadius: "8px" }}
             />
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="reksa-btn reksa-btn-secondary"
                 disabled={isUpdating}
                 onClick={() => setObstacleModalMisi(null)}
               >
@@ -369,12 +434,13 @@ export function MitraMisiPenyaluran({
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="reksa-btn reksa-btn-danger"
                 disabled={isUpdating || !obstacleNotes.trim()}
                 onClick={handleReportObstacle}
-                style={{ background: "#dc2626" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}
               >
-                {isUpdating ? "Mengirimkan..." : "Kirim Laporan Kendala"}
+                <AppIcon name="alert" size={15} />
+                <span>{isUpdating ? "Mengirimkan..." : "Kirim Laporan Kendala"}</span>
               </button>
             </div>
           </div>
